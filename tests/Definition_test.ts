@@ -263,3 +263,15 @@ Deno.test("Test that string types have right values", () => {
     assertEquals(resultUtf16, expectedUtf16);
     assertEquals(resultUtf32, expectedUtf32);
 });
+
+// BooleanTest
+Deno.test("Test that boolean types have right values", () => {
+    // Arrange
+    const expectedBoolean: BigInt = 100663297n;
+
+    // Act
+    const resultBoolean: BigInt = new DataView(Definitions.booleans.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+
+    // Assert
+    assertEquals(resultBoolean, expectedBoolean);
+});
