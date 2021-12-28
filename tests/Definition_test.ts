@@ -212,3 +212,33 @@ Deno.test("Test that signed integer array types have right values", () => {
     assertEquals(result2048bit, expected2048bit);
     assertEquals(result4096bit, expected4096bit);
 });
+
+// FloatingPointsTest
+Deno.test("Test that float types have right values", () => {
+    // Arrange
+    const expected8bit: BigInt = 33554433n;
+	const expected16bit: BigInt = 33554434n;
+	const expected32bit: BigInt = 33554435n;
+	const expected64bit: BigInt = 33554436n;
+	const expected128bit: BigInt = 33554437n;
+	const expected256bit: BigInt = 33554438n;
+	const expected512bit: BigInt = 33554439n;
+
+    // Act
+    const result8bit: BigInt = new DataView(Definitions.floating_point_8_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result16bit: BigInt = new DataView(Definitions.floating_point_16_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result32bit: BigInt = new DataView(Definitions.floating_point_32_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result64bit: BigInt = new DataView(Definitions.floating_point_64_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result128bit: BigInt = new DataView(Definitions.floating_point_128_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result256bit: BigInt = new DataView(Definitions.floating_point_256_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result512bit: BigInt = new DataView(Definitions.floating_point_512_bit.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+
+    // Assert
+    assertEquals(result8bit, expected8bit);
+    assertEquals(result16bit, expected16bit);
+    assertEquals(result32bit, expected32bit);
+    assertEquals(result64bit, expected64bit);
+    assertEquals(result128bit, expected128bit);
+    assertEquals(result256bit, expected256bit);
+    assertEquals(result512bit, expected512bit);
+});
