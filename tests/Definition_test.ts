@@ -95,3 +95,42 @@ Deno.test("Test that integer types have right values", () => {
     assertEquals(result2048bit, expected2048bit);
     assertEquals(result4096bit, expected4096bit);
 });
+
+// UnsignedIntegerArraysTest
+Deno.test("Test that integer array types have right values", () => {
+    // Arrange
+    const expected8bit: BigInt = 65537n;
+	const expected16bit: BigInt = 65538n;
+	const expected32bit: BigInt = 65539n;
+	const expected64bit: BigInt = 65540n;
+	const expected128bit: BigInt = 65541n;
+	const expected256bit: BigInt = 65542n;
+	const expected512bit: BigInt = 65543n;
+	const expected1024bit: BigInt = 65544n;
+	const expected2048bit: BigInt = 65545n;
+	const expected4096bit: BigInt = 65546n;
+
+    // Act
+    const result8bit: BigInt = new DataView(Definitions.unsigned_8_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result16bit: BigInt = new DataView(Definitions.unsigned_16_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result32bit: BigInt = new DataView(Definitions.unsigned_32_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result64bit: BigInt = new DataView(Definitions.unsigned_64_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result128bit: BigInt = new DataView(Definitions.unsigned_128_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result256bit: BigInt = new DataView(Definitions.unsigned_256_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result512bit: BigInt = new DataView(Definitions.unsigned_512_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result1024bit: BigInt = new DataView(Definitions.unsigned_1024_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result2048bit: BigInt = new DataView(Definitions.unsigned_2048_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const result4096bit: BigInt = new DataView(Definitions.unsigned_4096_bit_integerArrayType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+
+    // Assert
+    assertEquals(result8bit, expected8bit);
+    assertEquals(result16bit, expected16bit);
+    assertEquals(result32bit, expected32bit);
+    assertEquals(result64bit, expected64bit);
+    assertEquals(result128bit, expected128bit);
+    assertEquals(result256bit, expected256bit);
+    assertEquals(result512bit, expected512bit);
+    assertEquals(result1024bit, expected1024bit);
+    assertEquals(result2048bit, expected2048bit);
+    assertEquals(result4096bit, expected4096bit);
+});
