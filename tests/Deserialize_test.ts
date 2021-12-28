@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "https://deno.land/std@0.118.0/testing/asserts.ts";
+import { assert, assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
 import { AUDALF_Deserialize } from "../src/audalf_deserialize.ts";
 import { AUDALF_Definitions as Definitions } from "../src/AUDALF_Definitions.ts";
 
