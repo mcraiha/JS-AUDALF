@@ -275,3 +275,29 @@ Deno.test("Test that boolean types have right values", () => {
     // Assert
     assertEquals(resultBoolean, expectedBoolean);
 });
+
+// NextDivisableBy8Test
+Deno.test("Test that next divisable by 8 works", () => {
+    // Arrange
+    const arrayToTest: [number, number][] = [[0, 0],
+    [1, 8],
+    [2, 8],
+    [3, 8],
+    [4, 8],
+    [5, 8],
+    [6, 8],
+    [7, 8],
+    [8, 8],
+    [9, 16],
+    [799, 800],
+    [7995, 8000]];
+
+    // Act
+
+    // Assert
+    for (let o of arrayToTest)
+    {
+        assertEquals(Definitions.NextDivisableBy8(o[0]), o[1]);
+    }
+    
+});
