@@ -45,3 +45,14 @@ Deno.test("Test that we have proper FourCC", () => {
     // Assert
     assertEquals(Definitions.ByteArrayCompare(expected, Definitions.fourCC), true, "FourCC should match");
 });
+
+// SpecialTypeTest
+Deno.test("Test that we have proper special type", () => {
+    // Arrange
+    const valueGotFromBytes: BigInt = new DataView(Definitions.specialType.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+
+    // Act
+
+    // Assert
+    assertEquals(valueGotFromBytes, 0n, "Special type should equal 0");
+});
