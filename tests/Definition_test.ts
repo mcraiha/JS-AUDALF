@@ -242,3 +242,24 @@ Deno.test("Test that float types have right values", () => {
     assertEquals(result256bit, expected256bit);
     assertEquals(result512bit, expected512bit);
 });
+
+// StringsTest
+Deno.test("Test that string types have right values", () => {
+    // Arrange
+    const expectedAscii: BigInt = 83886081n;
+    const expectedUtf8: BigInt = 83886082n;
+    const expectedUtf16: BigInt = 83886083n;
+    const expectedUtf32: BigInt = 83886084n;
+
+    // Act
+    const resultAscii: BigInt = new DataView(Definitions.string_ascii.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const resultUtf8: BigInt = new DataView(Definitions.string_utf8.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const resultUtf16: BigInt = new DataView(Definitions.string_utf16.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+    const resultUtf32: BigInt = new DataView(Definitions.string_utf32.buffer, 0, 8).getBigUint64(0, /* littleEndian */ true);
+
+    // Assert
+    assertEquals(resultAscii, expectedAscii);
+    assertEquals(resultUtf8, expectedUtf8);
+    assertEquals(resultUtf16, expectedUtf16);
+    assertEquals(resultUtf32, expectedUtf32);
+});
