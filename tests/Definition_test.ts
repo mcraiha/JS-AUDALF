@@ -33,3 +33,15 @@ Deno.test("ByteArrayCompare not equal tests", () => {
     assertEquals(shouldBeFalse2, false, "Array1 and array3 should not be equal");
     assertEquals(shouldBeFalse3, false, "Array2 and array3 should not be equal");
 });
+
+// FourCCTest
+Deno.test("Test that we have proper FourCC", () => {
+    // Arrange
+    const fourCC: string = "AUDA";
+    const expected: Uint8Array = new TextEncoder().encode(fourCC);
+
+    // Act
+
+    // Assert
+    assertEquals(Definitions.ByteArrayCompare(expected, Definitions.fourCC), true, "FourCC should match");
+});
