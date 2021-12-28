@@ -58,7 +58,7 @@ Deno.test("Test that we have proper special type", () => {
 });
 
 // UnsignedIntegersTest
-Deno.test("Test that integer types have right values", () => {
+Deno.test("Test that unsigned integer types have right values", () => {
     // Arrange
     const expected8bit: BigInt = 1n;
 	const expected16bit: BigInt = 2n;
@@ -97,7 +97,7 @@ Deno.test("Test that integer types have right values", () => {
 });
 
 // UnsignedIntegerArraysTest
-Deno.test("Test that integer array types have right values", () => {
+Deno.test("Test that unsigned integer array types have right values", () => {
     // Arrange
     const expected8bit: BigInt = 65537n;
 	const expected16bit: BigInt = 65538n;
