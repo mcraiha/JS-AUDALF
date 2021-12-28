@@ -45,7 +45,43 @@ export class AUDALF_Deserialize
 	/// <returns>Array of variables</returns>
 	public static Deserialize(payload: Uint8Array, doSafetyChecks: boolean = true): any
 	{
-		
+		if (doSafetyChecks)
+		{
+			if (!AUDALF_Deserialize.IsAUDALF(payload))
+			{
+				throw new Error('Payload is not in an AUDALF format');
+			}
+		}
+
+		const entryOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(payload);
+
+		if (AUDALF_Deserialize.IsDictionary(payload))
+		{
+			// Dictionary
+
+		}
+		else
+		{
+			// Array
+			const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(payload, entryOffsets);
+
+			if (sameTypes[0])
+			{
+				if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.unsigned_8_bit_integerType))
+				{
+					const returnValues: Uint8Array = new Uint8Array(entryOffsets.length);
+					for (let i = 0; i < returnValues.length; i++)
+					{
+						const indexAndValue: [bigint, any] = AUDALF_Deserialize.ReadListKeyAndValueFromOffset(payload, entryOffsets[i], "");
+						returnValues[Number(indexAndValue[0])] = indexAndValue[1];
+					}
+
+					return returnValues;
+				}
+			}
+		}
+
+		throw new Error('Cannot deserialize payload');
 	}
 
 	public static IsAUDALF(payload: Uint8Array): boolean
@@ -96,6 +132,25 @@ export class AUDALF_Deserialize
 		}
 
 		return returnValues;
+	}
+
+	public static CheckIfAllEntryDefinitionsHaveSameTypes(payload: Uint8Array, offsets: bigint[]): [boolean, Uint8Array | null]
+	{
+		let lastType: Uint8Array | null = null;
+		for (let i = 0; i < offsets.length; i++)
+		{
+			const numberOffset = Number(offsets[i]);
+			const typeIdAsBytesOffset: number = numberOffset + 8;
+			const typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
+			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
+			{
+				return [false, null];
+			}
+
+			lastType = typeIdAsBytes;
+		}
+
+		return [true, lastType];
 	}
 
 	public static ReadListKeyAndValueFromOffset(payload: Uint8Array, offset: bigint, wantedType: string): [bigint, any] 
