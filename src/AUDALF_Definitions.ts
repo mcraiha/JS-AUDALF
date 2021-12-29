@@ -44,7 +44,7 @@ enum DateTimeFormat
 /// <summary>
 /// Serialization settings
 /// </summary>
-class SerializationSettings
+export class SerializationSettings
 {
     /// <summary>
     /// Date time format for serialization
