@@ -25,6 +25,18 @@ class ByteWriter
         this.curPos += increasePos;
     }
 
+    public WriteUshort(ushort: number): void
+    {
+        const increasePos = 2;
+        new DataView(this.byteArray.buffer).setUint16(this.curPos, ushort, /* littleEndian*/ true);
+        this.curPos += increasePos;
+    }
+
+    public WriteUshortArray(uint16ArrayToWrite: Uint16Array): void
+    {
+        // TODO: Add this
+    }
+
     public WriteNumberAs64BitUnsigned(numberToWrite: number): void
     {
         if (numberToWrite < 0)
@@ -69,6 +81,11 @@ export class AUDALF_Serialize
         if (object instanceof Uint8Array)
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_8_bit_integerType, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof Uint16Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_16_bit_integerType, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
 
@@ -190,6 +207,10 @@ export class AUDALF_Serialize
         {
             AUDALF_Serialize.WriteByte(writer, variableToWrite, isKey);
         }
+        else if (Definitions.ByteArrayCompare(originalType, Definitions.unsigned_16_bit_integerType))
+        {
+            AUDALF_Serialize.WriteUshort(writer, variableToWrite, isKey);
+        }
     }
 
     private static WriteByte(writer: ByteWriter, variableToWrite: any, isKey: boolean): void
@@ -206,5 +227,21 @@ export class AUDALF_Serialize
 
         // Write 7 bytes of padding
         writer.WriteZeroBytes(7);
+    }
+
+    private static WriteUshort(writer: ByteWriter, variableToWrite: any, isKey: boolean): void
+    {
+        // Single ushort takes either 8 bytes (as key since type ID is given earlier) or 16 bytes (as value since type ID must be given)
+        if (!isKey)
+        {
+            // Write value type ID (8 bytes)
+            writer.WriteByteArray(Definitions.unsigned_16_bit_integerType);
+        }
+        
+        // Write ushort as 2 bytes
+        writer.WriteUshort(variableToWrite);
+
+        // Write 6 bytes of padding
+        writer.WriteZeroBytes(6);
     }
 }
