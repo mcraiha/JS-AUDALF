@@ -514,6 +514,18 @@ export class AUDALF_Definitions
     //private static readonly const typescriptTypeToAUDALF: Map<type, Uint8Array> = new Map<AUDALFtypes, Uint8Array>();
     private static readonly AUDALFtoTypescriptType: Map<string, string> = new Map<string, string>();
 
+    private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([
+        [AUDALF_Definitions.unsigned_8_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.unsigned_16_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.unsigned_32_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.unsigned_64_bit_integerType.toString(), 8],
+
+        [AUDALF_Definitions.signed_8_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.signed_16_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.signed_32_bit_integerType.toString(), 8],
+        [AUDALF_Definitions.signed_64_bit_integerType.toString(), 8],
+    ]);
+
     static AUDALF_Definitions()
     {
         
@@ -569,6 +581,11 @@ export class AUDALF_Definitions
     public static GetTypescriptTypeWithAUDALFtype(tsType: string): string
     {
         return AUDALF_Definitions.AUDALFtoTypescriptType.get(tsType!)!;
+    }
+
+    public static GetByteLengthWithAUDALFtype(tsType: string): number
+    {
+        return AUDALF_Definitions.AUDALFtoByteLength.get(tsType!)!;
     }
 
     /// <summary>
