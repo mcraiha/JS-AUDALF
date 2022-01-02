@@ -68,6 +68,12 @@ class ByteWriter
     }
 }
 
+interface WriterDefinition 
+{
+    howManyBytesAreWritten: number;
+    writerFunc: (writer: ByteWriter, value: any) => void;
+}
+
 /// <summary>
 /// Static class for serializing structures to AUDALF bytes
 /// </summary>
@@ -201,47 +207,26 @@ export class AUDALF_Serialize
         AUDALF_Serialize.GenericWrite(writer, value, originalType, /*isKey*/ false, serializationSettings);
     }
 
+    private static readonly writerDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
+        [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: 1, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
+        [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: 2, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
+    ]);
+
     private static GenericWrite(writer: ByteWriter, variableToWrite: any, originalType: Uint8Array, isKey: boolean, serializationSettings: SerializationSettings): void
     {
-        if (Definitions.ByteArrayCompare(originalType, Definitions.unsigned_8_bit_integerType))
+        const typeKeyToUse: string = originalType.toString();
+        if (AUDALF_Serialize.writerDefinitions.has(typeKeyToUse))
         {
-            AUDALF_Serialize.WriteByte(writer, variableToWrite, isKey);
-        }
-        else if (Definitions.ByteArrayCompare(originalType, Definitions.unsigned_16_bit_integerType))
-        {
-            AUDALF_Serialize.WriteUshort(writer, variableToWrite, isKey);
-        }
-    }
+            if (!isKey)
+            {
+                // Write value type ID (8 bytes)
+                writer.WriteByteArray(originalType);
+            }
 
-    private static WriteByte(writer: ByteWriter, variableToWrite: any, isKey: boolean): void
-    {
-        // Single byte takes either 8 bytes (as key since type ID is given earlier) or 16 bytes (as value since type ID must be given)
-        if (!isKey)
-        {
-            // Write value type ID (8 bytes)
-            writer.WriteByteArray(Definitions.unsigned_8_bit_integerType);
+            const writerDef: WriterDefinition = AUDALF_Serialize.writerDefinitions.get(typeKeyToUse)!;
+
+            writerDef.writerFunc(writer, variableToWrite);
+            writer.WriteZeroBytes(8 - writerDef.howManyBytesAreWritten);
         }
-        
-        // Write byte as 1 byte
-        writer.WriteByte(variableToWrite);
-
-        // Write 7 bytes of padding
-        writer.WriteZeroBytes(7);
-    }
-
-    private static WriteUshort(writer: ByteWriter, variableToWrite: any, isKey: boolean): void
-    {
-        // Single ushort takes either 8 bytes (as key since type ID is given earlier) or 16 bytes (as value since type ID must be given)
-        if (!isKey)
-        {
-            // Write value type ID (8 bytes)
-            writer.WriteByteArray(Definitions.unsigned_16_bit_integerType);
-        }
-        
-        // Write ushort as 2 bytes
-        writer.WriteUshort(variableToWrite);
-
-        // Write 6 bytes of padding
-        writer.WriteZeroBytes(6);
     }
 }
