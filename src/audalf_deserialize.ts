@@ -89,6 +89,17 @@ export class AUDALF_Deserialize
 
 					return returnValues;
 				}
+				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.string_utf8))
+				{
+					const returnValues: string[] = new Array<string>(entryOffsets.length);
+					for (let i = 0; i < returnValues.length; i++)
+					{
+						const indexAndValue: [bigint, any] = AUDALF_Deserialize.ReadListKeyAndValueFromOffset(payload, entryOffsets[i], "");
+						returnValues[Number(indexAndValue[0])] = indexAndValue[1];
+					}
+
+					return returnValues;
+				}
 			}
 		}
 
@@ -260,8 +271,10 @@ export class AUDALF_Deserialize
 			}
 			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.string_utf8))
 			{
-				/*ulong stringLengthInBytes = reader.ReadUInt64();
-				return Encoding.UTF8.GetString(reader.ReadBytes((int)stringLengthInBytes));*/
+				const stringLengthInBytes: bigint = new DataView(payload.buffer, numberOffset, 8).getBigUint64(0, /* littleEndian */ true);
+				const contentOffset: number = numberOffset + 8;
+				const stringContent: Uint8Array = payload.slice(contentOffset, contentOffset + Number(stringLengthInBytes));
+				return new TextDecoder("utf-8").decode(stringContent);
 			}
 			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.booleans))
 			{

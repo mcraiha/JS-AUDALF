@@ -49,6 +49,14 @@ class ByteWriter
         // TODO: Add this
     }
 
+    public WriteStringAsUtf8(str: string): void
+    {
+        const encodedText: Uint8Array = new TextEncoder().encode(str);
+        const increasePos: number = encodedText.length;
+        this.byteArray.set(encodedText, this.curPos);
+        this.curPos += increasePos;
+    }
+
     public WriteNumberAs64BitUnsigned(numberToWrite: number): void
     {
         if (numberToWrite < 0)
@@ -111,6 +119,11 @@ export class AUDALF_Serialize
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_32_bit_integerType, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
+        else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.string_utf8, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
 
         throw new Error('Cannot serialize objectd');
     }
@@ -126,12 +139,42 @@ export class AUDALF_Serialize
         return 8 + 8 + (indexCount * 8);
     }
 
+    private static readonly isConstantLength: Map<string, boolean> = new Map<string, boolean>([
+        [Definitions.unsigned_8_bit_integerType.toString(), true],
+        [Definitions.unsigned_16_bit_integerType.toString(), true],
+        [Definitions.unsigned_32_bit_integerType.toString(), true],
+        [Definitions.string_utf8.toString(), false],
+    ]);
+
+    private static readonly dynamicLengthCalculator: Map<string, (value: any) => number> = new Map<string, (value: any) => number>([
+        [Definitions.string_utf8.toString(), (value: any) => new TextEncoder().encode(value).length],
+    ]);
+
     private static CalculateNeededListBytes(values: any[], originalType: Uint8Array | null): number
     {
         if (originalType != null)
         {
-            // List index + value type + actual value in bytes
-            return values.length * (8 + 8 + Definitions.GetByteLengthWithAUDALFtype(originalType.toString()));
+            const typeKeyToUse: string = originalType.toString();
+            if (AUDALF_Serialize.isConstantLength.has(typeKeyToUse))
+            {
+                // List index + value type + actual value in bytes
+                return values.length * (8 + 8 + Definitions.GetByteLengthWithAUDALFtype(originalType.toString()));
+            }
+            else
+            {
+                let calc = (value: any) => 0; // Init to 0
+                if (AUDALF_Serialize.dynamicLengthCalculator.has(typeKeyToUse))
+                {
+                    calc = AUDALF_Serialize.dynamicLengthCalculator.get(typeKeyToUse)!;
+                }
+                // Each value must be calculated separately
+                let total: number = 0;
+                for (let i = 0; i < values.length; i++)
+                {
+                    total += (8 + 8 + Definitions.NextDivisableBy8(calc(values[i])));
+                }
+                return total;
+            }
         }
 
         let total: number = 0;
@@ -224,16 +267,20 @@ export class AUDALF_Serialize
         AUDALF_Serialize.GenericWrite(writer, value, originalType, /*isKey*/ false, serializationSettings);
     }
 
-    private static readonly writerDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
+    private static readonly writerConstantDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
         [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: Uint8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
         [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: Uint16Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
         [Definitions.unsigned_32_bit_integerType.toString(), { howManyBytesAreWritten: Uint32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUint(value) } }],
     ]);
 
+    private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
+        [Definitions.string_utf8.toString(), { howManyBytesAreWritten: -1, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteStringAsUtf8(value) } }],
+    ]);  
+
     private static GenericWrite(writer: ByteWriter, variableToWrite: any, originalType: Uint8Array, isKey: boolean, serializationSettings: SerializationSettings): void
     {
         const typeKeyToUse: string = originalType.toString();
-        if (AUDALF_Serialize.writerDefinitions.has(typeKeyToUse))
+        if (AUDALF_Serialize.writerConstantDefinitions.has(typeKeyToUse))
         {
             if (!isKey)
             {
@@ -241,10 +288,24 @@ export class AUDALF_Serialize
                 writer.WriteByteArray(originalType);
             }
 
-            const writerDef: WriterDefinition = AUDALF_Serialize.writerDefinitions.get(typeKeyToUse)!;
+            const writerDef: WriterDefinition = AUDALF_Serialize.writerConstantDefinitions.get(typeKeyToUse)!;
 
             writerDef.writerFunc(writer, variableToWrite);
             writer.WriteZeroBytes(8 - writerDef.howManyBytesAreWritten);
+        }
+        else if (AUDALF_Serialize.writerDynamicDefinitions.has(typeKeyToUse))
+        {
+            if (!isKey)
+            {
+                // Write value type ID (8 bytes)
+                writer.WriteByteArray(originalType);
+            }
+
+            const writerDef: WriterDefinition = AUDALF_Serialize.writerDynamicDefinitions.get(typeKeyToUse)!;
+
+            writerDef.writerFunc(writer, variableToWrite);
+            const howManyZeroesToWrite: number = Definitions.NextDivisableBy8(writer.curPos) - writer.curPos;
+            writer.WriteZeroBytes(howManyZeroesToWrite);
         }
     }
 }
