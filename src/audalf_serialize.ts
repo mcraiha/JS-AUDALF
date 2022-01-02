@@ -13,7 +13,7 @@ class ByteWriter
 
     public WriteByte(byte: number): void
     {
-        const increasePos = 1;
+        const increasePos = Uint8Array.BYTES_PER_ELEMENT;
         new DataView(this.byteArray.buffer).setUint8(this.curPos, byte);
         this.curPos += increasePos;
     }
@@ -27,7 +27,7 @@ class ByteWriter
 
     public WriteUshort(ushort: number): void
     {
-        const increasePos = 2;
+        const increasePos = Uint16Array.BYTES_PER_ELEMENT;
         new DataView(this.byteArray.buffer).setUint16(this.curPos, ushort, /* littleEndian*/ true);
         this.curPos += increasePos;
     }
@@ -225,8 +225,8 @@ export class AUDALF_Serialize
     }
 
     private static readonly writerDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
-        [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: 1, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
-        [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: 2, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
+        [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: Uint8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
+        [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: Uint16Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
         [Definitions.unsigned_32_bit_integerType.toString(), { howManyBytesAreWritten: Uint32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUint(value) } }],
     ]);
 
