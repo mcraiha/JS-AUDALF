@@ -37,6 +37,18 @@ class ByteWriter
         // TODO: Add this
     }
 
+    public WriteUint(uint: number): void
+    {
+        const increasePos = Uint32Array.BYTES_PER_ELEMENT;
+        new DataView(this.byteArray.buffer).setUint32(this.curPos, uint, /* littleEndian*/ true);
+        this.curPos += increasePos;
+    }
+
+    public WriteUintArray(uint32ArrayToWrite: Uint32Array): void
+    {
+        // TODO: Add this
+    }
+
     public WriteNumberAs64BitUnsigned(numberToWrite: number): void
     {
         if (numberToWrite < 0)
@@ -92,6 +104,11 @@ export class AUDALF_Serialize
         else if (object instanceof Uint16Array)
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_16_bit_integerType, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof Uint32Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_32_bit_integerType, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
 
@@ -210,6 +227,7 @@ export class AUDALF_Serialize
     private static readonly writerDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
         [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: 1, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
         [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: 2, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
+        [Definitions.unsigned_32_bit_integerType.toString(), { howManyBytesAreWritten: Uint32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUint(value) } }],
     ]);
 
     private static GenericWrite(writer: ByteWriter, variableToWrite: any, originalType: Uint8Array, isKey: boolean, serializationSettings: SerializationSettings): void
