@@ -17,3 +17,18 @@ Deno.test("Byte array roundtrip test", () => {
   assertEquals(byteArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
   assertEquals(Definitions.ByteArrayCompare(byteArray, byteArrayDeserialized), true, "Arrays should match");
 });
+
+// UShortArrayRoundtripTest()
+Deno.test("Ushort array roundtrip test", () => {
+  // Arrange
+  const ushortArray: Uint16Array = new Uint16Array([0, 1, 10, 100, 1000, 65535]);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(ushortArray);
+  const ushortArrayDeserialized: Uint16Array = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(ushortArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(ushortArray, ushortArrayDeserialized, "Arrays should match");
+});
