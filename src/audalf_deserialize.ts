@@ -78,7 +78,7 @@ export class AUDALF_Deserialize
 
 					return returnValues;
 				}
-				if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.unsigned_16_bit_integerType))
+				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.unsigned_16_bit_integerType))
 				{
 					const returnValues: Uint16Array = new Uint16Array(entryOffsets.length);
 					for (let i = 0; i < returnValues.length; i++)
