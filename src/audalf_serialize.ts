@@ -52,7 +52,14 @@ class ByteWriter
     public WriteStringAsUtf8(str: string): void
     {
         const encodedText: Uint8Array = new TextEncoder().encode(str);
+
+        // First write the length
+        this.WriteNumberAs64BitUnsigned(encodedText.length);
+
+        
         const increasePos: number = encodedText.length;
+
+        // Then write actual content
         this.byteArray.set(encodedText, this.curPos);
         this.curPos += increasePos;
     }
@@ -121,7 +128,7 @@ export class AUDALF_Serialize
         }
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
         {
-            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.string_utf8, serializationSettings);
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(object, Definitions.string_utf8, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
 
@@ -139,15 +146,14 @@ export class AUDALF_Serialize
         return 8 + 8 + (indexCount * 8);
     }
 
-    private static readonly isConstantLength: Map<string, boolean> = new Map<string, boolean>([
-        [Definitions.unsigned_8_bit_integerType.toString(), true],
-        [Definitions.unsigned_16_bit_integerType.toString(), true],
-        [Definitions.unsigned_32_bit_integerType.toString(), true],
-        [Definitions.string_utf8.toString(), false],
+    private static readonly isConstantLength: Set<string> = new Set<string>([
+        Definitions.unsigned_8_bit_integerType.toString(),
+        Definitions.unsigned_16_bit_integerType.toString(),
+        Definitions.unsigned_32_bit_integerType.toString(),
     ]);
 
     private static readonly dynamicLengthCalculator: Map<string, (value: any) => number> = new Map<string, (value: any) => number>([
-        [Definitions.string_utf8.toString(), (value: any) => new TextEncoder().encode(value).length],
+        [Definitions.string_utf8.toString(), (value: any) => 8 + new TextEncoder().encode(value).length],
     ]);
 
     private static CalculateNeededListBytes(values: any[], originalType: Uint8Array | null): number
@@ -158,7 +164,7 @@ export class AUDALF_Serialize
             if (AUDALF_Serialize.isConstantLength.has(typeKeyToUse))
             {
                 // List index + value type + actual value in bytes
-                return values.length * (8 + 8 + Definitions.GetByteLengthWithAUDALFtype(originalType.toString()));
+                return values.length * (8 + 8 + Definitions.GetByteLengthWithAUDALFtype(typeKeyToUse));
             }
             else
             {
@@ -173,6 +179,7 @@ export class AUDALF_Serialize
                 {
                     total += (8 + 8 + Definitions.NextDivisableBy8(calc(values[i])));
                 }
+
                 return total;
             }
         }
