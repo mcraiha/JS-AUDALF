@@ -302,17 +302,30 @@ export class AUDALF_Serialize
         }
         else if (AUDALF_Serialize.writerDynamicDefinitions.has(typeKeyToUse))
         {
-            if (!isKey)
+            if (variableToWrite === null)
             {
-                // Write value type ID (8 bytes)
-                writer.WriteByteArray(originalType);
+                // We have to error out if null is used as key
+                if (isKey)
+                {
+                    throw new Error(AUDALF_Serialize.KeyCannotBeNullError);
+                }
+
+                AUDALF_Serialize.WriteSpecialNullType(writer, originalType);
             }
+            else
+            {
+                const writerDef: WriterDefinition = AUDALF_Serialize.writerDynamicDefinitions.get(typeKeyToUse)!;
 
-            const writerDef: WriterDefinition = AUDALF_Serialize.writerDynamicDefinitions.get(typeKeyToUse)!;
-
-            writerDef.writerFunc(writer, variableToWrite);
-            const howManyZeroesToWrite: number = Definitions.NextDivisableBy8(writer.curPos) - writer.curPos;
-            writer.WriteZeroBytes(howManyZeroesToWrite);
+                writerDef.writerFunc(writer, variableToWrite);
+                const howManyZeroesToWrite: number = Definitions.NextDivisableBy8(writer.curPos) - writer.curPos;
+                writer.WriteZeroBytes(howManyZeroesToWrite);
+            }
         }
     }
+
+    private static WriteSpecialNullType(writer: ByteWriter, originalType: Uint8Array): void
+		{
+			writer.WriteByteArray(Definitions.specialType);
+			writer.WriteByteArray(originalType);
+		}
 }

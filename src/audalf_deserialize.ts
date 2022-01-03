@@ -213,7 +213,11 @@ export class AUDALF_Deserialize
 	private static Read(payload: Uint8Array, offset: bigint, typeIdAsBytes: Uint8Array, wantedType: string, settings?:DeserializationSettings): any
 		{
 			const numberOffset = Number(offset);
-			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerType))
+			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
+			{
+				return null;
+			}
+			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerType))
 			{
 				return new DataView(payload.buffer, numberOffset, 1).getUint8(0);
 			}
