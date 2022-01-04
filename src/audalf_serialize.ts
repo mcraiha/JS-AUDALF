@@ -146,22 +146,12 @@ export class AUDALF_Serialize
         return 8 + 8 + (indexCount * 8);
     }
 
-    private static readonly isConstantLength: Set<string> = new Set<string>([
-        Definitions.unsigned_8_bit_integerType.toString(),
-        Definitions.unsigned_16_bit_integerType.toString(),
-        Definitions.unsigned_32_bit_integerType.toString(),
-    ]);
-
-    private static readonly dynamicLengthCalculator: Map<string, (value: any) => number> = new Map<string, (value: any) => number>([
-        [Definitions.string_utf8.toString(), (value: any) => 8 + new TextEncoder().encode(value).length],
-    ]);
-
     private static CalculateNeededListBytes(values: any[], originalType: Uint8Array | null): number
     {
         if (originalType != null)
         {
             const typeKeyToUse: string = originalType.toString();
-            if (AUDALF_Serialize.isConstantLength.has(typeKeyToUse))
+            if (Definitions.isConstantLength.has(typeKeyToUse))
             {
                 // List index + value type + actual value in bytes
                 return values.length * (8 + 8 + Definitions.GetByteLengthWithAUDALFtype(typeKeyToUse));
@@ -169,9 +159,9 @@ export class AUDALF_Serialize
             else
             {
                 let calc = (value: any) => 0; // Init to 0
-                if (AUDALF_Serialize.dynamicLengthCalculator.has(typeKeyToUse))
+                if (Definitions.dynamicLengthCalculator.has(typeKeyToUse))
                 {
-                    calc = AUDALF_Serialize.dynamicLengthCalculator.get(typeKeyToUse)!;
+                    calc = Definitions.dynamicLengthCalculator.get(typeKeyToUse)!;
                 }
                 // Each value must be calculated separately
                 let total: number = 0;

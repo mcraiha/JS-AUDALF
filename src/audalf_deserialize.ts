@@ -58,7 +58,11 @@ export class AUDALF_Deserialize
 		if (AUDALF_Deserialize.IsDictionary(payload))
 		{
 			// Dictionary
-
+			const typeIdOfKeys: Uint8Array = AUDALF_Deserialize.ReadKeyType(payload);
+			for (let i = 0; i < entryOffsets.length; i++)
+			{
+				
+			}
 		}
 		else
 		{
@@ -217,145 +221,181 @@ export class AUDALF_Deserialize
 		return [keyIndex, readValue];
 	}
 
-	private static Read(payload: Uint8Array, offset: bigint, typeIdAsBytes: Uint8Array, wantedType: string, settings?:DeserializationSettings): any
+	public static ReadDictionaryKeyAndValueFromOffset(payload: Uint8Array, offset: bigint, typeIdOfKeys: Uint8Array, wantedType: string): [any, any] 
+	{
+		const key = this.Read(payload, offset, typeIdOfKeys, wantedType);
+		const offsetAdvance: number = Definitions.NextDivisableBy8(this.CalculateNeededReadOffsetAdvance(payload, offset, typeIdOfKeys));
+
+		const typeIdAsBytesOffset: number = Number(offset) + offsetAdvance;
+		const typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
+
+		const readValue = this.Read(payload, BigInt(typeIdAsBytesOffset + 8), typeIdAsBytes, wantedType);
+
+		return [key, readValue];
+	}
+
+	private static readonly dynamicLengthDeserializationCalculator: Map<string, (payload: Uint8Array, offset: bigint) => number> = new Map<string, (payload: Uint8Array, offset: bigint) => number>([
+        [Definitions.string_utf8.toString(), (payload: Uint8Array, offset: bigint) => 8 + Number(new DataView(payload.buffer, Number(offset), 8).getBigUint64(0, /* littleEndian */ true))],
+    ]);
+
+	private static CalculateNeededReadOffsetAdvance(payload: Uint8Array, offset: bigint, originalType: Uint8Array): number
+	{
+		const typeKeyToUse: string = originalType.toString();
+		if (Definitions.isConstantLength.has(typeKeyToUse))
 		{
-			const numberOffset = Number(offset);
-			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
-			{
-				return null;
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 1).getUint8(0);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerArrayType))
-			{
-				const byteArrayLengthInBytes: bigint = new DataView(payload.buffer, numberOffset, 8).getBigUint64(0);
-				const contentOffset: number = numberOffset + 8;
-				return payload.slice(contentOffset, contentOffset + Number(byteArrayLengthInBytes));
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_16_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 2).getUint16(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_32_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 4).getUint32(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_64_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 8).getBigUint64(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_16_bit_integerArrayType))
-			{
-				/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
-				byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
-				ushort[] returnArray = new ushort[byteArrayLengthInBytes / 2];
-				Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
-				return returnArray;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_32_bit_integerArrayType))
-			{
-				/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
-				byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
-				uint[] returnArray = new uint[byteArrayLengthInBytes / 4];
-				Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
-				return returnArray;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_8_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 1).getInt8(0);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_16_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 2).getInt16(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_32_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 4).getInt32(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_32_bit_integerArrayType))
-			{
-				/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
-				byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
-				int[] returnArray = new int[byteArrayLengthInBytes / 4];
-				Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
-				return returnArray;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_64_bit_integerType))
-			{
-				return new DataView(payload.buffer, numberOffset, 8).getBigInt64(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_64_bit_integerArrayType))
-			{
-				/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
-				byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
-				long[] returnArray = new long[byteArrayLengthInBytes / 8];
-				Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
-				return returnArray;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.floating_point_32_bit))
-			{
-				return new DataView(payload.buffer, numberOffset, 4).getFloat32(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.floating_point_64_bit))
-			{
-				return new DataView(payload.buffer, numberOffset, 8).getFloat64(0, /* littleEndian */ true);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.string_utf8))
-			{
-				const stringLengthInBytes: bigint = new DataView(payload.buffer, numberOffset, 8).getBigUint64(0, /* littleEndian */ true);
-				const contentOffset: number = numberOffset + 8;
-				const stringContent: Uint8Array = payload.slice(contentOffset, contentOffset + Number(stringLengthInBytes));
-				return new TextDecoder("utf-8").decode(stringContent);
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.booleans))
-			{
-				//return reader.ReadBoolean();
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_seconds))
-			{
-				/*long timeStamp = reader.ReadInt64();
-				DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(timeStamp);
+			// For constant types
+			return Definitions.GetByteLengthWithAUDALFtype(typeKeyToUse);
+		}
 
-				if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
-				{
-					return dateTimeOffset;
-				}
-				
-				return dateTimeOffset.UtcDateTime;// .DateTime;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_milliseconds))
-			{
-				/*long timeStamp = reader.ReadInt64();
-				DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(timeStamp);
+		// Dynamic ones
+		let calc = (payload: Uint8Array, offset: bigint) => 0; // Init to 0
+		if (Definitions.dynamicLengthDeserializationCalculator.has(typeKeyToUse))
+		{
+			calc = Definitions.dynamicLengthDeserializationCalculator.get(typeKeyToUse)!;
+		}
+		
+		return calc(payload, offset);
+	}
 
-				if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
-				{
-					return dateTimeOffset;
-				}
-
-				return dateTimeOffset.UtcDateTime;// .DateTime;*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_iso_8601))
-			{
-				/*ulong stringLengthInBytes = reader.ReadUInt64();
-				string iso8601 = Encoding.UTF8.GetString(reader.ReadBytes((int)stringLengthInBytes));
-
-				if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
-				{
-					return DateTimeOffset.Parse(iso8601, null, DateTimeStyles.RoundtripKind);
-				}
-
-				return DateTime.Parse(iso8601, null, DateTimeStyles.RoundtripKind);*/
-			}
-			else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.bigIntegerType))
-			{
-				/*ulong bigIntegerLengthInBytes = reader.ReadUInt64();
-				byte[] tempBytes = reader.ReadBytes((int)bigIntegerLengthInBytes);
-				return new BigInteger(tempBytes);*/
-			}
-
+	private static Read(payload: Uint8Array, offset: bigint, typeIdAsBytes: Uint8Array, wantedType: string, settings?:DeserializationSettings): any
+	{
+		const numberOffset = Number(offset);
+		if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
+		{
 			return null;
 		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 1).getUint8(0);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_8_bit_integerArrayType))
+		{
+			const byteArrayLengthInBytes: bigint = new DataView(payload.buffer, numberOffset, 8).getBigUint64(0);
+			const contentOffset: number = numberOffset + 8;
+			return payload.slice(contentOffset, contentOffset + Number(byteArrayLengthInBytes));
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_16_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 2).getUint16(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_32_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 4).getUint32(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_64_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 8).getBigUint64(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_16_bit_integerArrayType))
+		{
+			/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
+			byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
+			ushort[] returnArray = new ushort[byteArrayLengthInBytes / 2];
+			Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
+			return returnArray;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.unsigned_32_bit_integerArrayType))
+		{
+			/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
+			byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
+			uint[] returnArray = new uint[byteArrayLengthInBytes / 4];
+			Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
+			return returnArray;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_8_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 1).getInt8(0);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_16_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 2).getInt16(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_32_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 4).getInt32(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_32_bit_integerArrayType))
+		{
+			/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
+			byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
+			int[] returnArray = new int[byteArrayLengthInBytes / 4];
+			Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
+			return returnArray;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_64_bit_integerType))
+		{
+			return new DataView(payload.buffer, numberOffset, 8).getBigInt64(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.signed_64_bit_integerArrayType))
+		{
+			/*ulong byteArrayLengthInBytes = reader.ReadUInt64();
+			byte[] bytes = reader.ReadBytes((int)byteArrayLengthInBytes);
+			long[] returnArray = new long[byteArrayLengthInBytes / 8];
+			Buffer.BlockCopy(bytes, 0, returnArray, 0, (int)byteArrayLengthInBytes);
+			return returnArray;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.floating_point_32_bit))
+		{
+			return new DataView(payload.buffer, numberOffset, 4).getFloat32(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.floating_point_64_bit))
+		{
+			return new DataView(payload.buffer, numberOffset, 8).getFloat64(0, /* littleEndian */ true);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.string_utf8))
+		{
+			const stringLengthInBytes: bigint = new DataView(payload.buffer, numberOffset, 8).getBigUint64(0, /* littleEndian */ true);
+			const contentOffset: number = numberOffset + 8;
+			const stringContent: Uint8Array = payload.slice(contentOffset, contentOffset + Number(stringLengthInBytes));
+			return new TextDecoder("utf-8").decode(stringContent);
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.booleans))
+		{
+			//return reader.ReadBoolean();
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_seconds))
+		{
+			/*long timeStamp = reader.ReadInt64();
+			DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(timeStamp);
+
+			if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
+			{
+				return dateTimeOffset;
+			}
+			
+			return dateTimeOffset.UtcDateTime;// .DateTime;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_milliseconds))
+		{
+			/*long timeStamp = reader.ReadInt64();
+			DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(timeStamp);
+
+			if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
+			{
+				return dateTimeOffset;
+			}
+
+			return dateTimeOffset.UtcDateTime;// .DateTime;*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_iso_8601))
+		{
+			/*ulong stringLengthInBytes = reader.ReadUInt64();
+			string iso8601 = Encoding.UTF8.GetString(reader.ReadBytes((int)stringLengthInBytes));
+
+			if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
+			{
+				return DateTimeOffset.Parse(iso8601, null, DateTimeStyles.RoundtripKind);
+			}
+
+			return DateTime.Parse(iso8601, null, DateTimeStyles.RoundtripKind);*/
+		}
+		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.bigIntegerType))
+		{
+			/*ulong bigIntegerLengthInBytes = reader.ReadUInt64();
+			byte[] tempBytes = reader.ReadBytes((int)bigIntegerLengthInBytes);
+			return new BigInteger(tempBytes);*/
+		}
+
+		return null;
+	}
 }
