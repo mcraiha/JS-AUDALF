@@ -314,6 +314,12 @@ export class AUDALF_Serialize
             }
             else
             {
+                if (!isKey)
+                {
+                    // Write value type ID (8 bytes)
+                    writer.WriteByteArray(originalType);
+                }
+
                 const writerDef: WriterDefinition = AUDALF_Serialize.writerDynamicDefinitions.get(typeKeyToUse)!;
 
                 writerDef.writerFunc(writer, variableToWrite);
@@ -324,8 +330,8 @@ export class AUDALF_Serialize
     }
 
     private static WriteSpecialNullType(writer: ByteWriter, originalType: Uint8Array): void
-		{
-			writer.WriteByteArray(Definitions.specialType);
-			writer.WriteByteArray(originalType);
-		}
+    {
+        writer.WriteByteArray(Definitions.specialType);
+        writer.WriteByteArray(originalType);
+    }
 }

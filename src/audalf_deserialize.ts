@@ -185,7 +185,14 @@ export class AUDALF_Deserialize
 		{
 			const numberOffset = Number(offsets[i]);
 			const typeIdAsBytesOffset: number = numberOffset + 8;
-			const typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
+			let typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
+
+			// Special case for NULL since order is different in that case
+			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
+			{
+				typeIdAsBytes = payload.slice(typeIdAsBytesOffset + 8, typeIdAsBytesOffset + 16);
+			}
+
 			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
 			{
 				return [false, null];
