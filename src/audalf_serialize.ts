@@ -146,6 +146,10 @@ export class AUDALF_Serialize
         return 8 + 8 + (indexCount * 8);
     }
 
+    private static readonly dynamicLengthSerializationCalculator: Map<string, (value: any) => number> = new Map<string, (value: any) => number>([
+        [Definitions.string_utf8.toString(), (value: any) => 8 + new TextEncoder().encode(value).length],
+    ]);
+
     private static CalculateNeededListBytes(values: any[], originalType: Uint8Array | null): number
     {
         if (originalType != null)
@@ -159,9 +163,9 @@ export class AUDALF_Serialize
             else
             {
                 let calc = (value: any) => 0; // Init to 0
-                if (Definitions.dynamicLengthCalculator.has(typeKeyToUse))
+                if (this.dynamicLengthSerializationCalculator.has(typeKeyToUse))
                 {
-                    calc = Definitions.dynamicLengthCalculator.get(typeKeyToUse)!;
+                    calc = this.dynamicLengthSerializationCalculator.get(typeKeyToUse)!;
                 }
                 // Each value must be calculated separately
                 let total: number = 0;

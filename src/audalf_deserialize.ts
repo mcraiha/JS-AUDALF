@@ -59,10 +59,13 @@ export class AUDALF_Deserialize
 		{
 			// Dictionary
 			const typeIdOfKeys: Uint8Array = AUDALF_Deserialize.ReadKeyType(payload);
+			const returnMap = new Map();
 			for (let i = 0; i < entryOffsets.length; i++)
 			{
-				
+				const keyAndValue: [any, any] = this.ReadDictionaryKeyAndValueFromOffset(payload, entryOffsets[i], typeIdOfKeys, "");
+				returnMap.set(keyAndValue[0], keyAndValue[1]);
 			}
+			return Object.fromEntries(returnMap);
 		}
 		else
 		{
@@ -249,9 +252,9 @@ export class AUDALF_Deserialize
 
 		// Dynamic ones
 		let calc = (payload: Uint8Array, offset: bigint) => 0; // Init to 0
-		if (Definitions.dynamicLengthDeserializationCalculator.has(typeKeyToUse))
+		if (this.dynamicLengthDeserializationCalculator.has(typeKeyToUse))
 		{
-			calc = Definitions.dynamicLengthDeserializationCalculator.get(typeKeyToUse)!;
+			calc = this.dynamicLengthDeserializationCalculator.get(typeKeyToUse)!;
 		}
 		
 		return calc(payload, offset);

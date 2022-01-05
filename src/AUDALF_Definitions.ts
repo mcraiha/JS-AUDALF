@@ -514,14 +514,10 @@ export class AUDALF_Definitions
     //private static readonly const typescriptTypeToAUDALF: Map<type, Uint8Array> = new Map<AUDALFtypes, Uint8Array>();
     private static readonly AUDALFtoTypescriptType: Map<string, string> = new Map<string, string>();
 
-    private static readonly isConstantLength: Set<string> = new Set<string>([
+    public static readonly isConstantLength: Set<string> = new Set<string>([
         this.unsigned_8_bit_integerType.toString(),
         this.unsigned_16_bit_integerType.toString(),
         this.unsigned_32_bit_integerType.toString(),
-    ]);
-
-    private static readonly dynamicLengthSerializationCalculator: Map<string, (value: any) => number> = new Map<string, (value: any) => number>([
-        [this.string_utf8.toString(), (value: any) => 8 + new TextEncoder().encode(value).length],
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([
