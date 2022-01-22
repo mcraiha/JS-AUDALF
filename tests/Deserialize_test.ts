@@ -189,7 +189,8 @@ Deno.test("Deserialize AUDALF bytes to string-string dictionary", () => {
   const isDictionary: boolean = AUDALF_Deserialize.IsDictionary(inputArray);
   const indexCount: bigint = AUDALF_Deserialize.GetIndexCount(inputArray);
   const entryDefinitionOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(inputArray);
-  //const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(inputArray, entryDefinitionOffsets);
+  const typeIdOfKeys: Uint8Array = AUDALF_Deserialize.ReadKeyType(inputArray);
+  const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllDictionaryEntryDefinitionsHaveSameValueTypes(inputArray, entryDefinitionOffsets, typeIdOfKeys);
   const newObject = AUDALF_Deserialize.Deserialize(inputArray);
 
   // Assert
@@ -197,7 +198,7 @@ Deno.test("Deserialize AUDALF bytes to string-string dictionary", () => {
   assertEquals(versionNumber, new DataView(Definitions.versionNumber.buffer, 0, 4).getUint32(0, /* littleEndian */ true), "Result should have correct version number");
   assertEquals(isDictionary, true, "Result should contain a dictionary, not an array");
   assertEquals(indexCount, BigInt(entryDefinitionOffsets.length), "Result should have certain number of entry definitions");
-  //assertEquals(sameTypes[0], true, "All elements should have same type");
+  assertEquals(sameTypes[0], true, "All values should have same type");
   assertEquals(newObject, expected, "Objects should match");
 
   for (const u of entryDefinitionOffsets)

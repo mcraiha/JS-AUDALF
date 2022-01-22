@@ -195,18 +195,13 @@ export class AUDALF_Deserialize
 			let typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
 
 			// Special case for NULL since order is different in that case
-			//console.log(typeIdAsBytes);
 			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
 			{
-				//console.log("SPECIAL CASE!");
 				typeIdAsBytes = payload.slice(typeIdAsBytesOffset + 8, typeIdAsBytesOffset + 16);
 			}
 
 			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
 			{
-				console.log(typeIdAsBytes);
-				console.log(" vs ");
-				console.log(lastType);
 				return [false, null];
 			}
 
@@ -224,23 +219,19 @@ export class AUDALF_Deserialize
 			const numberOffset = Number(offsets[i]);
 
 			// Figure how much space key needs
+			const offsetAdvance: number = Definitions.NextDivisableBy8(this.CalculateNeededReadOffsetAdvance(payload, offsets[i], typeIdOfKeys));
 
-			const typeIdAsBytesOffset: number = numberOffset + 8;
+			const typeIdAsBytesOffset: number = numberOffset + offsetAdvance;
 			let typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
 
 			// Special case for NULL since order is different in that case
-			//console.log(typeIdAsBytes);
 			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
 			{
-				//console.log("SPECIAL CASE!");
 				typeIdAsBytes = payload.slice(typeIdAsBytesOffset + 8, typeIdAsBytesOffset + 16);
 			}
 
 			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
 			{
-				console.log(typeIdAsBytes);
-				console.log(" vs ");
-				console.log(lastType);
 				return [false, null];
 			}
 
