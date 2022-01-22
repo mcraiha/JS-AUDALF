@@ -49,7 +49,7 @@ Deno.test("Deserialize AUDALF bytes to byte array", () => {
   const isDictionary: boolean = AUDALF_Deserialize.IsDictionary(inputArray);
   const indexCount: bigint = AUDALF_Deserialize.GetIndexCount(inputArray);
   const entryDefinitionOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(inputArray);
-  const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(inputArray, entryDefinitionOffsets);
+  const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllListEntryDefinitionsHaveSameValueTypes(inputArray, entryDefinitionOffsets);
   const byteArray: Uint8Array = AUDALF_Deserialize.Deserialize(inputArray);
 
   // Assert
@@ -125,7 +125,7 @@ Deno.test("Deserialize AUDALF bytes to int32 array", () => {
   const isDictionary: boolean = AUDALF_Deserialize.IsDictionary(inputArray);
   const indexCount: bigint = AUDALF_Deserialize.GetIndexCount(inputArray);
   const entryDefinitionOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(inputArray);
-  const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(inputArray, entryDefinitionOffsets);
+  const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllListEntryDefinitionsHaveSameValueTypes(inputArray, entryDefinitionOffsets);
   const intArray: Int32Array = AUDALF_Deserialize.Deserialize(inputArray);
 
   // Assert
@@ -135,6 +135,70 @@ Deno.test("Deserialize AUDALF bytes to int32 array", () => {
   assertEquals(indexCount, BigInt(entryDefinitionOffsets.length), "Result should have certain number of entry definitions");
   assertEquals(sameTypes[0], true, "All elements should have same type");
   assertEquals(intArray, expected, "Arrays should match");
+
+  for (const u of entryDefinitionOffsets)
+  {
+    assert(u > entryDefinitionsOffset, "Each entry definition should point to valid address inside the payload");
+    assert(u < byteSize, "Each entry definition should point to valid address inside the payload");
+    assertEquals(u % 8n === 0n, true, "Every offset should align to 8 bytes (64 bits)");
+  }
+});
+
+Deno.test("Deserialize AUDALF bytes to string-string dictionary", () => {
+  // Arrange
+  const inputArray: Uint8Array = new Uint8Array([
+    /* FOURCC*/ 0x41, 0x55, 0x44, 0x41, 
+    /* VERSION NUMBER */ 0x01, 0x00, 0x00, 0x00,
+    /* SIZE OF WHOLE ARRAY */ 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* INDEX COUNT */  0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    /* KEY TYPE */ 0x02, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 
+    /* ADDRESS OF KEY #1 */ 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* ADDRESS OF KEY #2 */ 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    /* ADDRESS OF KEY #3 */ 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    
+    /* KEY #1 length */ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* KEY #1 content */ 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    /* VALUE TYPE ID #1 */ 0x02, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 
+    /* VALUE #1 length */ 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* VALUE #1 content */ 0x69, 0x73, 0x20, 0x6F, 0x6E, 0x65, 0x00, 0x00,
+
+    /* KEY #2 length */  0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* KEY #2 content */ 0x73, 0x65, 0x63, 0x6F, 0x6E, 0x64, 0x00, 0x00, 
+    
+    /* VALUE TYPE ID #2 */ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    /* KEY #2 content */ 0x02, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 
+
+    /* KEY #3 length */ 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* KEY #2 content */ 0x65, 0x6D, 0x6F, 0x6A, 0x69, 0x73, 0x00, 0x00,
+
+    /* VALUE TYPE ID #3  */ 0x02, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 
+    /* VALUE #3 length */ 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    /* VALUE #3 content */ 0xF0, 0x9F, 0x90, 0xB6, 0xF0, 0x9F, 0x8D, 0xA6
+  ]);
+
+  const entryDefinitionsOffset: bigint = BigInt(Definitions.entryDefinitionsOffset);
+
+  const expected = { 1: 'is one', second: null, emojis: '🐶🍦' };
+
+  // Act
+  const isAUDALF: boolean = AUDALF_Deserialize.IsAUDALF(inputArray);
+  const versionNumber:number = AUDALF_Deserialize.GetVersionNumber(inputArray);
+  const byteSize: bigint = AUDALF_Deserialize.GetByteSize(inputArray);
+  const isDictionary: boolean = AUDALF_Deserialize.IsDictionary(inputArray);
+  const indexCount: bigint = AUDALF_Deserialize.GetIndexCount(inputArray);
+  const entryDefinitionOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(inputArray);
+  //const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(inputArray, entryDefinitionOffsets);
+  const newObject = AUDALF_Deserialize.Deserialize(inputArray);
+
+  // Assert
+  assertEquals(isAUDALF, true, "Result should be AUDALF payload");
+  assertEquals(versionNumber, new DataView(Definitions.versionNumber.buffer, 0, 4).getUint32(0, /* littleEndian */ true), "Result should have correct version number");
+  assertEquals(isDictionary, true, "Result should contain a dictionary, not an array");
+  assertEquals(indexCount, BigInt(entryDefinitionOffsets.length), "Result should have certain number of entry definitions");
+  //assertEquals(sameTypes[0], true, "All elements should have same type");
+  assertEquals(newObject, expected, "Objects should match");
 
   for (const u of entryDefinitionOffsets)
   {

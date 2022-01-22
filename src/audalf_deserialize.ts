@@ -70,7 +70,7 @@ export class AUDALF_Deserialize
 		else
 		{
 			// Array
-			const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllEntryDefinitionsHaveSameTypes(payload, entryOffsets);
+			const sameTypes: [boolean, Uint8Array | null] = AUDALF_Deserialize.CheckIfAllListEntryDefinitionsHaveSameValueTypes(payload, entryOffsets);
 
 			if (sameTypes[0])
 			{
@@ -185,7 +185,7 @@ export class AUDALF_Deserialize
 		return returnValues;
 	}
 
-	public static CheckIfAllEntryDefinitionsHaveSameTypes(payload: Uint8Array, offsets: bigint[]): [boolean, Uint8Array | null]
+	public static CheckIfAllListEntryDefinitionsHaveSameValueTypes(payload: Uint8Array, offsets: bigint[]): [boolean, Uint8Array | null]
 	{
 		let lastType: Uint8Array | null = null;
 		for (let i = 0; i < offsets.length; i++)
@@ -195,13 +195,52 @@ export class AUDALF_Deserialize
 			let typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
 
 			// Special case for NULL since order is different in that case
+			//console.log(typeIdAsBytes);
 			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
 			{
+				//console.log("SPECIAL CASE!");
 				typeIdAsBytes = payload.slice(typeIdAsBytesOffset + 8, typeIdAsBytesOffset + 16);
 			}
 
 			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
 			{
+				console.log(typeIdAsBytes);
+				console.log(" vs ");
+				console.log(lastType);
+				return [false, null];
+			}
+
+			lastType = typeIdAsBytes;
+		}
+
+		return [true, lastType];
+	}
+
+	public static CheckIfAllDictionaryEntryDefinitionsHaveSameValueTypes(payload: Uint8Array, offsets: bigint[], typeIdOfKeys: Uint8Array): [boolean, Uint8Array | null]
+	{
+		let lastType: Uint8Array | null = null;
+		for (let i = 0; i < offsets.length; i++)
+		{
+			const numberOffset = Number(offsets[i]);
+
+			// Figure how much space key needs
+
+			const typeIdAsBytesOffset: number = numberOffset + 8;
+			let typeIdAsBytes: Uint8Array = payload.slice(typeIdAsBytesOffset, typeIdAsBytesOffset + 8);
+
+			// Special case for NULL since order is different in that case
+			//console.log(typeIdAsBytes);
+			if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.specialType))
+			{
+				//console.log("SPECIAL CASE!");
+				typeIdAsBytes = payload.slice(typeIdAsBytesOffset + 8, typeIdAsBytesOffset + 16);
+			}
+
+			if (lastType != null && !Definitions.ByteArrayCompare(typeIdAsBytes, lastType))
+			{
+				console.log(typeIdAsBytes);
+				console.log(" vs ");
+				console.log(lastType);
 				return [false, null];
 			}
 
