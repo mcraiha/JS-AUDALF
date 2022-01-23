@@ -515,9 +515,15 @@ export class AUDALF_Definitions
     private static readonly AUDALFtoTypescriptType: Map<string, string> = new Map<string, string>();
 
     public static readonly isConstantLength: Set<string> = new Set<string>([
+        // Unsigned ints
         this.unsigned_8_bit_integerType.toString(),
         this.unsigned_16_bit_integerType.toString(),
         this.unsigned_32_bit_integerType.toString(),
+
+        // Signed ints
+        this.signed_8_bit_integerType.toString(),
+        this.signed_16_bit_integerType.toString(),
+        this.signed_32_bit_integerType.toString(),
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([

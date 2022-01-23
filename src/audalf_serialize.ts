@@ -49,6 +49,13 @@ class ByteWriter
         // TODO: Add this
     }
 
+    public WriteSByte(sbyte: number): void
+    {
+        const increasePos = Int8Array.BYTES_PER_ELEMENT;
+        new DataView(this.byteArray.buffer).setInt8(this.curPos, sbyte);
+        this.curPos += increasePos;
+    }
+
     public WriteStringAsUtf8(str: string): void
     {
         const encodedText: Uint8Array = new TextEncoder().encode(str);
@@ -124,6 +131,11 @@ export class AUDALF_Serialize
         else if (object instanceof Uint32Array)
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.unsigned_32_bit_integerType, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof Int8Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.signed_8_bit_integerType, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
@@ -269,9 +281,13 @@ export class AUDALF_Serialize
     }
 
     private static readonly writerConstantDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
+        // Unsigned ints
         [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: Uint8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
         [Definitions.unsigned_16_bit_integerType.toString(), { howManyBytesAreWritten: Uint16Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUshort(value) } }],
         [Definitions.unsigned_32_bit_integerType.toString(), { howManyBytesAreWritten: Uint32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteUint(value) } }],
+
+        // Signed ints
+        [Definitions.signed_8_bit_integerType.toString(), { howManyBytesAreWritten: Int8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteSByte(value) } }],
     ]);
 
     private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
