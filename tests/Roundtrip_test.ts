@@ -108,6 +108,21 @@ Deno.test("Int array roundtrip test", () => {
   assertEquals(intArray, intArrayDeserialized, "Arrays should match");
 });
 
+// UlongArrayRoundtripTest()
+Deno.test("Long array roundtrip test", () => {
+  // Arrange
+  const longArray : BigInt64Array = new BigInt64Array([-9223372036854775808n, 0n, 1n, 10n, 100n, 1000n, 1000000n, 1000000000n, 9223372036854775807n]);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(longArray);
+  const longArrayDeserialized: BigInt64Array = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(longArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(longArray, longArrayDeserialized, "Arrays should match");
+});
+
 // StringArrayRoundtripTest()
 Deno.test("String array roundtrip test", () => {
   // Arrange
