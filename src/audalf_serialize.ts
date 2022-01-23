@@ -77,6 +77,13 @@ class ByteWriter
         this.curPos += increasePos;
     }
 
+    public WriteLong(long: bigint): void
+    {
+        const increasePos = BigInt64Array.BYTES_PER_ELEMENT;
+        new DataView(this.byteArray.buffer).setBigInt64(this.curPos, long, /* littleEndian*/ true);
+        this.curPos += increasePos;
+    }
+
     public WriteStringAsUtf8(str: string): void
     {
         const encodedText: Uint8Array = new TextEncoder().encode(str);
@@ -172,6 +179,11 @@ export class AUDALF_Serialize
         else if (object instanceof Int32Array)
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.signed_32_bit_integerType, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof BigInt64Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.signed_64_bit_integerType, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
@@ -327,6 +339,7 @@ export class AUDALF_Serialize
         [Definitions.signed_8_bit_integerType.toString(), { howManyBytesAreWritten: Int8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteSByte(value) } }],
         [Definitions.signed_16_bit_integerType.toString(), { howManyBytesAreWritten: Int16Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteShort(value) } }],
         [Definitions.signed_32_bit_integerType.toString(), { howManyBytesAreWritten: Int32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteInt(value) } }],
+        [Definitions.signed_64_bit_integerType.toString(), { howManyBytesAreWritten: BigInt64Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteLong(value) } }],
     ]);
 
     private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
