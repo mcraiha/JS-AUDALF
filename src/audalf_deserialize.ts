@@ -107,6 +107,17 @@ export class AUDALF_Deserialize
 
 					return returnValues;
 				}
+				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.unsigned_64_bit_integerType))
+				{
+					const returnValues: BigUint64Array = new BigUint64Array(entryOffsets.length);
+					for (let i = 0; i < returnValues.length; i++)
+					{
+						const indexAndValue: [bigint, any] = AUDALF_Deserialize.ReadListKeyAndValueFromOffset(payload, entryOffsets[i], "");
+						returnValues[Number(indexAndValue[0])] = indexAndValue[1];
+					}
+
+					return returnValues;
+				}
 				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.signed_8_bit_integerType))
 				{
 					const returnValues: Int8Array = new Int8Array(entryOffsets.length);

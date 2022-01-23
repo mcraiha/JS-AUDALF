@@ -48,6 +48,21 @@ Deno.test("Uint array roundtrip test", () => {
   assertEquals(uintArray, uintArrayDeserialized, "Arrays should match");
 });
 
+// UlongArrayRoundtripTest()
+Deno.test("Ulong array roundtrip test", () => {
+  // Arrange
+  const ulongArray : BigUint64Array = new BigUint64Array([0n, 1n, 10n, 100n, 1000n, 1000000n, 1000000000n, 18446744073709551615n]);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(ulongArray);
+  const ulongArrayDeserialized: BigUint64Array = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(ulongArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(ulongArray, ulongArrayDeserialized, "Arrays should match");
+});
+
 // SByteArrayRoundtripTest()
 Deno.test("SByte array roundtrip test", () => {
   // Arrange
