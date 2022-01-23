@@ -48,6 +48,36 @@ Deno.test("Uint array roundtrip test", () => {
   assertEquals(uintArray, uintArrayDeserialized, "Arrays should match");
 });
 
+// SByteArrayRoundtripTest()
+Deno.test("SByte array roundtrip test", () => {
+  // Arrange
+  const sbyteArray: Int8Array = new Int8Array([-128, 0, 1, 10, 100, 127]);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(sbyteArray);
+  const sbyteArrayDeserialized: Int8Array = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(sbyteArrayDeserialized.length > 0, true, "Sbyte array deserialized should NOT be empty");
+  assertEquals(sbyteArray, sbyteArrayDeserialized, "Arrays should match");
+});
+
+// ShortArrayRoundtripTest
+Deno.test("Short array roundtrip test", () => {
+  // Arrange
+  const shortArray: Int16Array = new Int16Array([-32768, 0, 1, 10, 100, 1000, 32767]);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(shortArray);
+  const shortArrayDeserialized: Int16Array = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(shortArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(shortArray, shortArrayDeserialized, "Arrays should match");
+});
+
 // StringArrayRoundtripTest()
 Deno.test("String array roundtrip test", () => {
   // Arrange
