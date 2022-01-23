@@ -519,11 +519,13 @@ export class AUDALF_Definitions
         this.unsigned_8_bit_integerType.toString(),
         this.unsigned_16_bit_integerType.toString(),
         this.unsigned_32_bit_integerType.toString(),
+        this.unsigned_64_bit_integerType.toString(),
 
         // Signed ints
         this.signed_8_bit_integerType.toString(),
         this.signed_16_bit_integerType.toString(),
         this.signed_32_bit_integerType.toString(),
+        this.signed_64_bit_integerType.toString(),
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([

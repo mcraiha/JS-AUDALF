@@ -102,6 +102,39 @@ Deno.test("Serialize uint array to AUDALF list", () => {
   }
 });
 
+// SerializeULongArrayToAUDALFList()
+Deno.test("Serialize ulong array to AUDALF list", () => {
+  // Arrange
+  const ulongArray : BigUint64Array = new BigUint64Array([0n, 1n, 10n, 100n, 1000n, 1000000n, 1000000000n, 18446744073709551615n]);
+
+  const entryDefinitionsOffset: bigint = BigInt(Definitions.entryDefinitionsOffset);
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(ulongArray);
+  const isAUDALF: boolean = AUDALF_Deserialize.IsAUDALF(result);
+  const versionNumber: number = AUDALF_Deserialize.GetVersionNumber(result);
+  const byteSize: bigint = AUDALF_Deserialize.GetByteSize(result);
+  const isDictionary: boolean = AUDALF_Deserialize.IsDictionary(result);
+  const indexCount: bigint = AUDALF_Deserialize.GetIndexCount(result);
+  const entryDefinitionOffsets: bigint[] = AUDALF_Deserialize.GetEntryDefinitionOffsets(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(isAUDALF, true, "Result should be AUDALF payload");
+  assertEquals(versionNumber, new DataView(Definitions.versionNumber.buffer, 0, 4).getUint32(0, /* littleEndian */ true), "Result should have correct version number");
+  assertEquals(result.length, Number(byteSize), "Result payload should have correct amount lenght info");
+  assertEquals(isDictionary, false, "Result should contain an array, not a dictionary");
+  assertEquals(ulongArray.length, Number(indexCount), "Result should contain certain number of items");
+  assertEquals(indexCount, BigInt(entryDefinitionOffsets.length), "Result should have certain number of entry definitions");
+  
+  for (const u of entryDefinitionOffsets)
+  {
+    assert(u > entryDefinitionsOffset, "Each entry definition should point to valid address inside the payload");
+    assert(u < byteSize, "Each entry definition should point to valid address inside the payload");
+    assertEquals(u % 8n === 0n, true, "Every offset should align to 8 bytes (64 bits)");
+  }
+});
+
 // SerializeSByteArrayToAUDALFList()
 Deno.test("Serialize sbyte array to AUDALF bytes", () => {
   // Arrange
