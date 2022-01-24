@@ -526,6 +526,10 @@ export class AUDALF_Definitions
         this.signed_16_bit_integerType.toString(),
         this.signed_32_bit_integerType.toString(),
         this.signed_64_bit_integerType.toString(),
+
+        // Floating points
+        this.floating_point_32_bit.toString(),
+        this.floating_point_64_bit.toString(),
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([
@@ -538,6 +542,9 @@ export class AUDALF_Definitions
         [AUDALF_Definitions.signed_16_bit_integerType.toString(), 8],
         [AUDALF_Definitions.signed_32_bit_integerType.toString(), 8],
         [AUDALF_Definitions.signed_64_bit_integerType.toString(), 8],
+
+        [AUDALF_Definitions.floating_point_32_bit.toString(), 8],
+        [AUDALF_Definitions.floating_point_64_bit.toString(), 8],
     ]);
 
     static AUDALF_Definitions()

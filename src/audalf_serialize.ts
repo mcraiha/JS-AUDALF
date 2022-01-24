@@ -84,6 +84,20 @@ class ByteWriter
         this.curPos += increasePos;
     }
 
+    public WriteFloat(float: number): void
+    {
+        const increasePos = Float32Array.BYTES_PER_ELEMENT;
+        new DataView(this.byteArray.buffer).setFloat32(this.curPos, float, /* littleEndian*/ true);
+        this.curPos += increasePos;
+    }
+
+    public WriteDouble(float: number): void
+    {
+        const increasePos = Float64Array.BYTES_PER_ELEMENT;
+        new DataView(this.byteArray.buffer).setFloat64(this.curPos, float, /* littleEndian*/ true);
+        this.curPos += increasePos;
+    }
+
     public WriteStringAsUtf8(str: string): void
     {
         const encodedText: Uint8Array = new TextEncoder().encode(str);
@@ -184,6 +198,16 @@ export class AUDALF_Serialize
         else if (object instanceof BigInt64Array)
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.signed_64_bit_integerType, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof Float32Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.floating_point_32_bit, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (object instanceof Float64Array)
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.floating_point_64_bit, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
@@ -340,6 +364,10 @@ export class AUDALF_Serialize
         [Definitions.signed_16_bit_integerType.toString(), { howManyBytesAreWritten: Int16Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteShort(value) } }],
         [Definitions.signed_32_bit_integerType.toString(), { howManyBytesAreWritten: Int32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteInt(value) } }],
         [Definitions.signed_64_bit_integerType.toString(), { howManyBytesAreWritten: BigInt64Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteLong(value) } }],
+
+        // Floating points
+        [Definitions.floating_point_32_bit.toString(), { howManyBytesAreWritten: Float32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteFloat(value) } }],
+        [Definitions.floating_point_64_bit.toString(), { howManyBytesAreWritten: Float64Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDouble(value) } }],
     ]);
 
     private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
