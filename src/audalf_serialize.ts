@@ -215,6 +215,12 @@ export class AUDALF_Serialize
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(object, Definitions.string_utf8, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
+        else if (object instanceof Map)
+        {
+            
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateDictionaryKeyValuePairs(object, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], serializationSettings.wantedDictionaryKeyType);
+        }
 
         throw new Error('Cannot serialize objectd');
     }
@@ -269,6 +275,95 @@ export class AUDALF_Serialize
         {
 
         }*/
+
+        return total;
+    }
+
+    private static CheckIfAllDictionaryKeysHaveSameType<K, V extends any>(map: Map<K, V>): boolean
+    {
+        let lastType: string | null = null;
+        Array.from(map.entries()).forEach(([k, v]) => {
+            if (lastType == null)
+            {
+                lastType = typeof k;
+            }
+            else if (lastType !== typeof k)
+            {
+                return false;
+            }
+        });
+
+        return true;
+    }
+
+    private static CheckIfAllDictionaryValueHaveSameType<K, V extends any>(map: Map<K, V>): boolean
+    {
+        let lastType: string | null = null;
+        Array.from(map.entries()).forEach(([k, v]) => {
+            if (lastType == null)
+            {
+                lastType = typeof v;
+            }
+            else if (lastType !== typeof v)
+            {
+                return false;
+            }
+        });
+
+        return true;
+    }
+
+    private static CalculateNeededDictionaryBytes<K, V extends any>(map: Map<K, V>, originalKeyType: Uint8Array | null, originalValueType: Uint8Array | null): number
+    {
+        // Since all the keys use same calculation, figure it out at this point
+        let keySizecalc: (value: any) => number; // Undefined by default
+        if (originalKeyType != null)
+        {
+            const typeKeyToUse: string = originalKeyType.toString();
+            if (Definitions.isConstantLength.has(typeKeyToUse))
+            {
+                keySizecalc = (value: any) => Definitions.GetByteLengthWithAUDALFtype(typeKeyToUse);
+            }
+            else
+            {
+                if (this.dynamicLengthSerializationCalculator.has(typeKeyToUse))
+                {
+                    keySizecalc = this.dynamicLengthSerializationCalculator.get(typeKeyToUse)!;
+                }
+            }
+        }
+        else
+        {
+            const stringTypeOfKey: string = typeof map.keys().next().value;
+        }
+
+        let total: number = 0;
+
+        Array.from(map.entries()).forEach(([k, v]) => {
+
+            let keySizeInBytes: number = 0;
+            if (keySizecalc != undefined)
+            {
+                keySizeInBytes += keySizecalc(k);
+            }
+            else
+            {
+                throw Error("Cannot calculate size of key of type");
+            }
+
+            let valueSizeInBytes: number = 0;
+
+            if (originalValueType != null)
+            {
+                const typeKeyToUse: string = originalValueType.toString();
+                if (Definitions.isConstantLength.has(typeKeyToUse))
+                {
+                    valueSizeInBytes = 8 + Definitions.GetByteLengthWithAUDALFtype(typeKeyToUse);
+                }
+            }
+            
+            total += (keySizeInBytes + valueSizeInBytes);
+        });
 
         return total;
     }
@@ -328,6 +423,73 @@ export class AUDALF_Serialize
         }
     }
 
+    private static GenerateDictionaryKeyValuePairs<T,V>(pairs: Map<unknown, unknown>, serializationSettings: SerializationSettings | null = null): [Uint8Array, number[]]
+    {
+        if (!this.CheckIfAllDictionaryKeysHaveSameType(pairs))
+        {
+            throw Error("ADAULF does not support different key types in Dictionary/Map!");
+        }
+
+        const allValuesAreSameType: boolean = this.CheckIfAllDictionaryValueHaveSameType(pairs);
+
+        let chosenKeyType: Uint8Array = Definitions.specialType;
+
+        if (serializationSettings == null || Definitions.ByteArrayCompare(serializationSettings.wantedDictionaryKeyType, Definitions.specialType))
+        {
+            // No key type set, we have to figure it out
+        }
+        else
+        {
+            // Certain key type requested
+            chosenKeyType = serializationSettings.wantedDictionaryKeyType;
+        }
+
+        let chosenValueType: Uint8Array = Definitions.specialType;
+
+        if (serializationSettings == null || Definitions.ByteArrayCompare(serializationSettings.wantedDictionaryValueType, Definitions.specialType))
+        {
+            // No value type set, we have to figure it out
+        }
+        else
+        {
+            // Certain value type requested
+            chosenValueType = serializationSettings.wantedDictionaryValueType;
+        }
+
+        const offsets: number[] = new Array(pairs.size);
+
+        const tempArray: Uint8Array = new Uint8Array(AUDALF_Serialize.CalculateNeededDictionaryBytes(pairs, chosenKeyType, chosenValueType));
+
+        const writer: ByteWriter = new ByteWriter(tempArray);
+
+        let offsetIndex: number = 0;
+
+        Array.from(pairs.entries()).forEach(([k, v]) => {
+            offsets[offsetIndex] = writer.curPos;
+            offsetIndex++;
+
+            this.WriteOneDictionaryKeyValuePair(writer, k, chosenKeyType, v, chosenValueType, serializationSettings);
+        });
+
+        return [writer.byteArray, offsets];
+    }
+
+    private static FigureOutTypeOfValue<T>(key: T, value: unknown, valueTypes: Map<T, string>): string | null
+    {
+        // ValueTypes will override everything else
+        if (valueTypes.has(key))
+        {
+            return valueTypes.get(key)!;
+        }
+        else if (value != null)
+        {
+            return typeof value;
+        }
+
+        // Not good, return null
+        return null;
+    }
+
     private static GenerateListKeyValuePairs(values: any[], originalType: Uint8Array, serializationSettings: SerializationSettings): [Uint8Array, number[]]
     {
         const offsets: number[] = new Array(values.length);
@@ -352,6 +514,12 @@ export class AUDALF_Serialize
         AUDALF_Serialize.GenericWrite(writer, value, originalType, /*isKey*/ false, serializationSettings);
     }
 
+    private static WriteOneDictionaryKeyValuePair(writer: ByteWriter, key: any, originalKeyType: Uint8Array, value: any, originalValueType: Uint8Array, serializationSettings: SerializationSettings | null): void
+    {
+        AUDALF_Serialize.GenericWrite(writer, key, originalKeyType, /*isKey*/ true, serializationSettings);
+        AUDALF_Serialize.GenericWrite(writer, value, originalValueType, /*isKey*/ false, serializationSettings);
+    }
+
     private static readonly writerConstantDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([
         // Unsigned ints
         [Definitions.unsigned_8_bit_integerType.toString(), { howManyBytesAreWritten: Uint8Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteByte(value) } }],
@@ -374,7 +542,7 @@ export class AUDALF_Serialize
         [Definitions.string_utf8.toString(), { howManyBytesAreWritten: -1, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteStringAsUtf8(value) } }],
     ]);  
 
-    private static GenericWrite(writer: ByteWriter, variableToWrite: any, originalType: Uint8Array, isKey: boolean, serializationSettings: SerializationSettings): void
+    private static GenericWrite(writer: ByteWriter, variableToWrite: any, originalType: Uint8Array, isKey: boolean, serializationSettings: SerializationSettings | null): void
     {
         const typeKeyToUse: string = originalType.toString();
         if (AUDALF_Serialize.writerConstantDefinitions.has(typeKeyToUse))

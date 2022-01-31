@@ -41,15 +41,19 @@ enum DateTimeFormat
     UnixInSeconds
 }
 
-/// <summary>
-/// Serialization settings
-/// </summary>
+/**
+ * Serialization settings
+ */
 export class SerializationSettings
 {
-    /// <summary>
-    /// Date time format for serialization
-    /// </summary>
+    /** Date time format for serialization */
     public dateTimeFormat: DateTimeFormat = DateTimeFormat.ISO8601;
+
+    /** Wanted dictionary key type */
+    public wantedDictionaryKeyType: Uint8Array = AUDALF_Definitions.specialType;
+
+    /** Wanted dictionary value type */
+    public wantedDictionaryValueType: Uint8Array = AUDALF_Definitions.specialType;
 }
 
 /// <summary>
@@ -641,12 +645,12 @@ export class AUDALF_Definitions
 
     // #region Common comparision
 
-    /// <summary>
-    /// Compare if two byte arrays are equal
-    /// </summary>
-    /// <param name="a1">First byte array</param>
-    /// <param name="a2">Second byte array</param>
-    /// <returns>True if they are equal; False otherwise</returns>
+    /**
+     * Compare if two byte arrays are equal
+     * @param a1 First byte array
+     * @param a2 Second byte array
+     * @returns True if they are equal; False otherwise
+     */
     public static ByteArrayCompare(a1: Uint8Array, a2: Uint8Array): boolean
     {
         if (a1.byteLength != a2.byteLength) { 
