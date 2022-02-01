@@ -56,15 +56,16 @@ export class SerializationSettings
     public wantedDictionaryValueType: Uint8Array = AUDALF_Definitions.specialType;
 }
 
-/// <summary>
-/// Deserialization Settings
-/// </summary>
+/**
+ * Deserialization Settings
+ */
 export class DeserializationSettings
 {
-    /// <summary>
-    /// Wanted time type for deserialization
-    /// </summary>
+    /** Wanted time type for deserialization */
     public wantedDateTimeType: AUDALFtypes = AUDALFtypes.byte;
+
+    /** Is Map wanted when deserializing dictionary (otherwise defaults to object) */
+    public wantedMap: boolean = false;
 }
 
 /// <summary>
