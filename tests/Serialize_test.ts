@@ -368,7 +368,7 @@ Deno.test("Serialize string array to AUDALF list", () => {
 
 Deno.test("Serialize byte-byte Map to AUDALF bytes", () => {
   // Arrange
-  const byteByteMap: Map<number, number> = new Map<number, number>([[1, 1], [10, 11], [254, 255]]);
+  const byteByteMap: Map<number, number> = new Map<number, number>([[0, 1], [10, 11], [254, 255]]);
 
   const entryDefinitionsOffset: bigint = BigInt(Definitions.entryDefinitionsOffset);
 
