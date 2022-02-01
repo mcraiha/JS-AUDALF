@@ -36,14 +36,14 @@ enum AUDALF_ValidationResult
 /// </summary>
 export class AUDALF_Deserialize
 {
-	/// <summary>
-	/// Deserialize AUDALF bytes to array
-	/// </summary>
-	/// <param name="payload">AUDALF bytes</param>
-	/// <param name="doSafetyChecks">Do safety checks</param>
-	/// <typeparam name="T">Type of array variables</typeparam>
-	/// <returns>Array of variables</returns>
-	public static Deserialize(payload: Uint8Array, doSafetyChecks: boolean = true): any
+	/**
+	 * Deserialize AUDALF bytes
+	 * @param payload >AUDALF bytes
+	 * @param doSafetyChecks Do safety checks
+	 * @param settings Deserialization settings to use
+	 * @returns Object, array or map (depends to payload)
+	 */
+	public static Deserialize(payload: Uint8Array, doSafetyChecks: boolean = true, settings?:DeserializationSettings): any
 	{
 		if (doSafetyChecks)
 		{
@@ -65,6 +65,14 @@ export class AUDALF_Deserialize
 				const keyAndValue: [any, any] = this.ReadDictionaryKeyAndValueFromOffset(payload, entryOffsets[i], typeIdOfKeys, "");
 				returnMap.set(keyAndValue[0], keyAndValue[1]);
 			}
+
+			// In case user wants Map
+			if (settings && settings.wantedMap)
+			{
+				return returnMap;
+			}
+
+			// By default object is returned
 			return Object.fromEntries(returnMap);
 		}
 		else
