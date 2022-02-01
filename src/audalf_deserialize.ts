@@ -31,9 +31,9 @@ enum AUDALF_ValidationResult
 	UnknownValueType
 }
 
-/// <summary>
-/// Static class for deserializing AUDALF bytes into something more useful
-/// </summary>
+/**
+ * Static class for deserializing AUDALF bytes into something more useful
+ */
 export class AUDALF_Deserialize
 {
 	/**
@@ -209,6 +209,11 @@ export class AUDALF_Deserialize
 		throw new Error('Cannot deserialize payload');
 	}
 
+	/**
+	 * Check if payload is AUDALF
+	 * @param payload {Uint8Array} Payload as byte array
+	 * @returns {boolean} True if it is; False otherwise
+	 */
 	public static IsAUDALF(payload: Uint8Array): boolean
 	{
 		return Definitions.ByteArrayCompare(Definitions.fourCC, payload.slice(0, 4));
@@ -224,6 +229,11 @@ export class AUDALF_Deserialize
 		return new DataView(payload.buffer, Definitions.payloadSizeOffset, 8).getBigUint64(0, /* littleEndian */ true);
 	}
 
+	/**
+	 * Is the content dictionary, or array 
+	 * @param payload {Uint8Array} Payload as byte array
+	 * @returns {boolean} True if it is dictionary, False in case of array
+	 */
 	public static IsDictionary(payload: Uint8Array): boolean
 	{
 		const keyType: Uint8Array = payload.slice(Definitions.keyTypeOffset, Definitions.keyTypeOffset + 8);
