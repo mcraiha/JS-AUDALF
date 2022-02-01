@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
 import { AUDALF_Serialize } from "../src/audalf_serialize.ts";
 import { AUDALF_Deserialize } from "../src/audalf_deserialize.ts";
-import { AUDALF_Definitions as Definitions } from "../src/AUDALF_Definitions.ts";
+import { AUDALF_Definitions as Definitions, SerializationSettings, DeserializationSettings } from "../src/AUDALF_Definitions.ts";
 
 // ByteArrayRoundtripTest()
 Deno.test("Byte array roundtrip test", () => {
@@ -166,4 +166,26 @@ Deno.test("String array roundtrip test", () => {
   assertEquals(result.length > 0, true, "Result should NOT be empty");
   assertEquals(stringArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
   assertEquals(stringArray, stringArrayDeserialized, "Arrays should match");
+});
+
+// ByteByteDictionaryRoundtripTest()
+Deno.test("Byte-byte dictionary roundtrip test", () => {
+  // Arrange
+  const byteByteMap: Map<number, number> = new Map<number, number>([[0, 1], [10, 11], [254, 255]]);
+
+  const serializationSettings: SerializationSettings = new SerializationSettings();
+  serializationSettings.wantedDictionaryKeyType = Definitions.unsigned_8_bit_integerType;
+  serializationSettings.wantedDictionaryValueType = Definitions.unsigned_8_bit_integerType;
+
+  const deserializationSettings: DeserializationSettings = new DeserializationSettings();
+  deserializationSettings.wantedMap = true;
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(byteByteMap, serializationSettings);
+  const byteByteMapDeserialized: Map<number, number> = AUDALF_Deserialize.Deserialize(result, false, deserializationSettings);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(byteByteMapDeserialized.size > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(byteByteMap, byteByteMapDeserialized, "Maps should match");
 });
