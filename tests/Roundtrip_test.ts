@@ -189,3 +189,25 @@ Deno.test("Byte-byte dictionary roundtrip test", () => {
   assertEquals(byteByteMapDeserialized.size > 0, true, "Byte array deserialized should NOT be empty");
   assertEquals(byteByteMap, byteByteMapDeserialized, "Maps should match");
 });
+
+// IntIntDictionaryRoundtripTest()
+Deno.test("Int-int dictionary roundtrip test", () => {
+  // Arrange
+  const intIntMap: Map<number, number> = new Map<number, number>([[-2147483648, -2147483647], [0, 1], [10, 11], [100, 101], [10000, 10001], [2147483646, 2147483647]]);
+
+  const serializationSettings: SerializationSettings = new SerializationSettings();
+  serializationSettings.wantedDictionaryKeyType = Definitions.signed_32_bit_integerType;
+  serializationSettings.wantedDictionaryValueType = Definitions.signed_32_bit_integerType;
+
+  const deserializationSettings: DeserializationSettings = new DeserializationSettings();
+  deserializationSettings.wantedMap = true;
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(intIntMap, serializationSettings);
+  const intIntMapDeserialized: Map<number, number> = AUDALF_Deserialize.Deserialize(result, false, deserializationSettings);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(intIntMapDeserialized.size > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(intIntMap, intIntMapDeserialized, "Maps should match");
+});
