@@ -20,24 +20,24 @@ enum AUDALFtypes
     biginteger
 }
 
-/// <summary>
-/// Date time format
-/// </summary>
+/**
+ * Date time format
+ */
 export enum DateTimeFormat
 {
-    /// <summary>
-    /// ISO8601, Default value
-    /// </summary>
+    /**
+     * ISO8601, Default value
+     */
     ISO8601 = 0,
 
-    /// <summary>
-    /// Unix milliseconds
-    /// </summary>
+    /**
+     * Unix milliseconds
+     */
     UnixInMilliseconds,
 
-    /// <summary>
-    /// Unix seconds
-    /// </summary>
+    /**
+     * Unix seconds
+     */
     UnixInSeconds
 }
 
@@ -68,9 +68,9 @@ export class DeserializationSettings
     public wantedMap: boolean = false;
 }
 
-/// <summary>
-/// Definitons that are static
-/// </summary>
+/**
+ * Definitions that are static
+ */
 export class AUDALF_Definitions
 {
     // #region Errors
@@ -481,34 +481,22 @@ export class AUDALF_Definitions
 
     // #region Known offsets
 
-    /// <summary>
-    /// Offset for FourCC
-    /// </summary>
+    /** Offset for FourCC */
     public static readonly fourCCOffset: number = 0;
 
-    /// <summary>
-    /// Offset for version
-    /// </summary>
+    /** Offset for version */
     public static readonly versionOffset: number = 4;
 
-    /// <summary>
-    /// Offset for payload size
-    /// </summary>
+    /** Offset for payload size */
     public static readonly payloadSizeOffset: number = 8;
 
-    /// <summary>
-    /// Offset for index count
-    /// </summary>
+    /** Offset for index count */
     public static readonly indexCountOffset: number = 16;
 
-    /// <summary>
-    /// Offset for key type
-    /// </summary>
+    /** Offset for key type */
     public static readonly keyTypeOffset: number = 24;
 
-    /// <summary>
-    /// Offset for entry definitions
-    /// </summary>
+    /** Offset for entry definitions */
     public static readonly entryDefinitionsOffset: number = 32;
 
     // #endregion
@@ -678,11 +666,11 @@ export class AUDALF_Definitions
 
     //#region Common math
 
-    /// <summary>
-    /// Find next offset that is divisable by 8. E.g. 23 would return 24
-    /// </summary>
-    /// <param name="current">Current address/offset</param>
-    /// <returns>Next value</returns>
+    /**
+     * Find next offset that is divisable by 8. E.g. 23 would return 24
+     * @param current Current address/offset
+     * @returns {number} Next value
+     */
     public static NextDivisableBy8(current: number): number
     {
         const bits: number = current & 7;
