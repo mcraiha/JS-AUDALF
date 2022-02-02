@@ -1,4 +1,4 @@
-import { AUDALF_Definitions as Definitions, SerializationSettings } from "./AUDALF_Definitions.ts";
+import { AUDALF_Definitions as Definitions, SerializationSettings, DateTimeFormat } from "./AUDALF_Definitions.ts";
 
 class ByteWriter
 {
@@ -125,6 +125,17 @@ class ByteWriter
         this.curPos += 8;
     }
 
+    public WriteDateAsUnixSeconds(date: Date): void
+    {
+        // Convert milliseconds to seconds
+        this.WriteLong(BigInt(Math.round(date.getTime() / 1000)));
+    }
+
+    public WriteDateAsUnixMilliSeconds(date: Date): void
+    {
+        this.WriteLong(BigInt(Math.round(date.getTime())));
+    }
+
     public WriteZeroBytes(howManyZeroesAreWanted: number): void
     {
         for (let i = 0; i < howManyZeroesAreWanted; i++)
@@ -209,6 +220,25 @@ export class AUDALF_Serialize
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.floating_point_64_bit, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (Array.isArray(object) && object.every((value) => value instanceof Date))
+        {
+            if (serializationSettings && serializationSettings.dateTimeFormat === DateTimeFormat.UnixInMilliseconds)
+            {
+                // In case unix milliseconds (since epoch) are wanted
+                const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.datetime_unix_milliseconds, serializationSettings);
+                return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+            }
+            else if (serializationSettings && serializationSettings.dateTimeFormat === DateTimeFormat.UnixInSeconds)
+            {
+                // In case unix seconds (since epoch) are wanted
+                const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(Array.from(object), Definitions.datetime_unix_seconds, serializationSettings);
+                return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+            }
+            else
+            {
+                // In case ISO8601 formatted strings are wanted
+            }
         }
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
         {
@@ -536,6 +566,10 @@ export class AUDALF_Serialize
         // Floating points
         [Definitions.floating_point_32_bit.toString(), { howManyBytesAreWritten: Float32Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteFloat(value) } }],
         [Definitions.floating_point_64_bit.toString(), { howManyBytesAreWritten: Float64Array.BYTES_PER_ELEMENT, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDouble(value) } }],
+
+        // Dates
+        [Definitions.datetime_unix_seconds.toString(), { howManyBytesAreWritten: 8, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDateAsUnixSeconds(value) } }],
+        [Definitions.datetime_unix_milliseconds.toString(), { howManyBytesAreWritten: 8, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDateAsUnixMilliSeconds(value) } }],
     ]);
 
     private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([

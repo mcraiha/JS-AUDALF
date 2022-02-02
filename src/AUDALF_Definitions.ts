@@ -23,7 +23,7 @@ enum AUDALFtypes
 /// <summary>
 /// Date time format
 /// </summary>
-enum DateTimeFormat
+export enum DateTimeFormat
 {
     /// <summary>
     /// ISO8601, Default value
@@ -535,6 +535,10 @@ export class AUDALF_Definitions
         // Floating points
         this.floating_point_32_bit.toString(),
         this.floating_point_64_bit.toString(),
+
+        // Dates
+        this.datetime_unix_seconds.toString(),
+        this.datetime_unix_milliseconds.toString(),
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([
@@ -550,6 +554,9 @@ export class AUDALF_Definitions
 
         [AUDALF_Definitions.floating_point_32_bit.toString(), 8],
         [AUDALF_Definitions.floating_point_64_bit.toString(), 8],
+
+        [AUDALF_Definitions.datetime_unix_seconds.toString(), 8],
+        [AUDALF_Definitions.datetime_unix_milliseconds.toString(), 8],
     ]);
 
     static AUDALF_Definitions()

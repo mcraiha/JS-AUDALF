@@ -192,6 +192,17 @@ export class AUDALF_Deserialize
 
 					return returnValues;
 				}
+				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.datetime_unix_milliseconds) || Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.datetime_unix_seconds))
+				{
+					const returnValues: Date[] = new Array<Date>(entryOffsets.length);
+					for (let i = 0; i < returnValues.length; i++)
+					{
+						const indexAndValue: [bigint, any] = AUDALF_Deserialize.ReadListKeyAndValueFromOffset(payload, entryOffsets[i], "");
+						returnValues[Number(indexAndValue[0])] = indexAndValue[1];
+					}
+
+					return returnValues;
+				}
 				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.string_utf8))
 				{
 					const returnValues: string[] = new Array<string>(entryOffsets.length);
@@ -472,27 +483,13 @@ export class AUDALF_Deserialize
 		}
 		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_seconds))
 		{
-			/*long timeStamp = reader.ReadInt64();
-			DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(timeStamp);
-
-			if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
-			{
-				return dateTimeOffset;
-			}
-			
-			return dateTimeOffset.UtcDateTime;// .DateTime;*/
+			const unixSeconds: bigint = new DataView(payload.buffer, numberOffset, 8).getBigInt64(0, /* littleEndian */ true);
+			return new Date(Number(unixSeconds) * 1000);
 		}
 		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_milliseconds))
 		{
-			/*long timeStamp = reader.ReadInt64();
-			DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(timeStamp);
-
-			if (wantedType == typeof(DateTimeOffset) || settings?.wantedDateTimeType == typeof(DateTimeOffset))
-			{
-				return dateTimeOffset;
-			}
-
-			return dateTimeOffset.UtcDateTime;// .DateTime;*/
+			const unixSeconds: bigint = new DataView(payload.buffer, numberOffset, 8).getBigInt64(0, /* littleEndian */ true);
+			return new Date(Number(unixSeconds));
 		}
 		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_iso_8601))
 		{

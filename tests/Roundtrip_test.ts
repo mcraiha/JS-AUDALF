@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
 import { AUDALF_Serialize } from "../src/audalf_serialize.ts";
 import { AUDALF_Deserialize } from "../src/audalf_deserialize.ts";
-import { AUDALF_Definitions as Definitions, SerializationSettings, DeserializationSettings } from "../src/AUDALF_Definitions.ts";
+import { AUDALF_Definitions as Definitions, SerializationSettings, DeserializationSettings, DateTimeFormat } from "../src/AUDALF_Definitions.ts";
 
 // ByteArrayRoundtripTest()
 Deno.test("Byte array roundtrip test", () => {
@@ -166,6 +166,23 @@ Deno.test("String array roundtrip test", () => {
   assertEquals(result.length > 0, true, "Result should NOT be empty");
   assertEquals(stringArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
   assertEquals(stringArray, stringArrayDeserialized, "Arrays should match");
+});
+
+// DateTimeArrayRoundtripTest()
+Deno.test("Date array roundtrip test", () => {
+  // Arrange
+  const dateArray: Date[] = [ new Date(1966, 1, 1), new Date(2000, 2, 28), new Date(2022, 6, 6) ];
+  const serializationSettings: SerializationSettings = new SerializationSettings();
+  serializationSettings.dateTimeFormat = DateTimeFormat.UnixInMilliseconds;
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(dateArray, serializationSettings);
+  const dateArrayDeserialized: Date[] = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(dateArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(dateArray, dateArrayDeserialized, "Arrays should match");
 });
 
 // ByteByteDictionaryRoundtripTest()
