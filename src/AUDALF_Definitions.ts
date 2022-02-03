@@ -507,6 +507,7 @@ export class AUDALF_Definitions
     //private static readonly const typescriptTypeToAUDALF: Map<type, Uint8Array> = new Map<AUDALFtypes, Uint8Array>();
     private static readonly AUDALFtoTypescriptType: Map<string, string> = new Map<string, string>();
 
+    /** Set of all types that take constant amount of storage space */
     public static readonly isConstantLength: Set<string> = new Set<string>([
         // Unsigned ints
         this.unsigned_8_bit_integerType.toString(),
