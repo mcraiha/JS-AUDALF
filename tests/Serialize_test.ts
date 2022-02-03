@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "https://deno.land/std@0.119.0/testing/asserts.ts";
+import { assert, assertEquals, assertThrows } from "https://deno.land/std@0.119.0/testing/asserts.ts";
 import { AUDALF_Serialize } from "../src/audalf_serialize.ts";
 import { AUDALF_Deserialize } from "../src/audalf_deserialize.ts";
 import { AUDALF_Definitions as Definitions, SerializationSettings } from "../src/AUDALF_Definitions.ts";
@@ -436,4 +436,22 @@ Deno.test("Serialize int-int Map to AUDALF bytes", () => {
     assert(u < byteSize, "Each entry definition should point to valid address inside the payload");
     assertEquals(u % 8n === 0n, true, "Every offset should align to 8 bytes (64 bits)");
   }
+});
+
+Deno.test("Try to serialize illegal map", () => {
+  // Arrange
+  const illegalMap: Map<unknown, unknown> = new Map();
+  illegalMap.set(1, 1);
+  illegalMap.set("aa", "bb");
+
+  // Act
+
+  // Assert
+  assertThrows(
+    () => {
+      AUDALF_Serialize.Serialize(illegalMap);
+    },
+    Error,
+    "ADAULF does not support different key types in Dictionary/Map!",
+  );
 });

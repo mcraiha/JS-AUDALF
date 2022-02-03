@@ -312,6 +312,7 @@ export class AUDALF_Serialize
     private static CheckIfAllDictionaryKeysHaveSameType<K, V extends any>(map: Map<K, V>): boolean
     {
         let lastType: string | null = null;
+        let returnValue: boolean = true;
         Array.from(map.entries()).forEach(([k, v]) => {
             if (lastType == null)
             {
@@ -319,16 +320,17 @@ export class AUDALF_Serialize
             }
             else if (lastType !== typeof k)
             {
-                return false;
+                returnValue = false;
             }
         });
 
-        return true;
+        return returnValue;
     }
 
     private static CheckIfAllDictionaryValueHaveSameType<K, V extends any>(map: Map<K, V>): boolean
     {
         let lastType: string | null = null;
+        let returnValue: boolean = true;
         Array.from(map.entries()).forEach(([k, v]) => {
             if (lastType == null)
             {
@@ -336,11 +338,11 @@ export class AUDALF_Serialize
             }
             else if (lastType !== typeof v)
             {
-                return false;
+                returnValue = false;
             }
         });
 
-        return true;
+        return returnValue;
     }
 
     private static CalculateNeededDictionaryBytes<K, V extends any>(map: Map<K, V>, originalKeyType: Uint8Array | null, originalValueType: Uint8Array | null): number
@@ -455,12 +457,13 @@ export class AUDALF_Serialize
 
     private static GenerateDictionaryKeyValuePairs<T,V>(pairs: Map<unknown, unknown>, serializationSettings: SerializationSettings | null = null): [Uint8Array, number[]]
     {
-        if (!this.CheckIfAllDictionaryKeysHaveSameType(pairs))
+        const keysHaveSameType: boolean = this.CheckIfAllDictionaryKeysHaveSameType(pairs);
+        if (!keysHaveSameType)
         {
             throw Error("ADAULF does not support different key types in Dictionary/Map!");
         }
 
-        const allValuesAreSameType: boolean = this.CheckIfAllDictionaryValueHaveSameType(pairs);
+        const valuesHaveSameType: boolean = this.CheckIfAllDictionaryValueHaveSameType(pairs);
 
         let chosenKeyType: Uint8Array = Definitions.specialType;
 
