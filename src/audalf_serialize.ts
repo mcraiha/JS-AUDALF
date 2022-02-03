@@ -327,7 +327,7 @@ export class AUDALF_Serialize
         return returnValue;
     }
 
-    private static CheckIfAllDictionaryValueHaveSameType<K, V extends any>(map: Map<K, V>): boolean
+    private static CheckIfAllDictionaryValuesHaveSameType<K, V extends any>(map: Map<K, V>): boolean
     {
         let lastType: string | null = null;
         let returnValue: boolean = true;
@@ -463,7 +463,7 @@ export class AUDALF_Serialize
             throw Error("ADAULF does not support different key types in Dictionary/Map!");
         }
 
-        const valuesHaveSameType: boolean = this.CheckIfAllDictionaryValueHaveSameType(pairs);
+        const valuesHaveSameType: boolean = this.CheckIfAllDictionaryValuesHaveSameType(pairs);
 
         let chosenKeyType: Uint8Array = Definitions.specialType;
 
