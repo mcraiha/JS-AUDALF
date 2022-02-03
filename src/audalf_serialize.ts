@@ -147,6 +147,12 @@ class ByteWriter
         }
     }
 
+    public WriteBoolean(bool: boolean): void
+    {
+        this.WriteByte(bool ? 1 : 0);
+        this.WriteZeroBytes(7);
+    }
+
     public WriteBigInt(bigInteger: bigint): void
     {
 
@@ -246,6 +252,11 @@ export class AUDALF_Serialize
         else if (Array.isArray(object) && object.every((value) => typeof value === 'string'))
         {
             const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(object, Definitions.string_utf8, serializationSettings);
+            return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
+        }
+        else if (Array.isArray(object) && object.every((value) => typeof value === 'boolean'))
+        {
+            const dataAndPairs: [Uint8Array, number[]] = AUDALF_Serialize.GenerateListKeyValuePairs(object, Definitions.booleans, serializationSettings);
             return AUDALF_Serialize.GenericSerialize(dataAndPairs[0], dataAndPairs[1], Definitions.specialType);
         }
         else if (object instanceof Map)
@@ -576,6 +587,9 @@ export class AUDALF_Serialize
         // Dates
         [Definitions.datetime_unix_seconds.toString(), { howManyBytesAreWritten: 8, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDateAsUnixSeconds(value) } }],
         [Definitions.datetime_unix_milliseconds.toString(), { howManyBytesAreWritten: 8, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteDateAsUnixMilliSeconds(value) } }],
+
+        // Booleans
+        [Definitions.booleans.toString(), { howManyBytesAreWritten: 8, writerFunc: (writer: ByteWriter, value: any) => { writer.WriteBoolean(value) } }],
     ]);
 
     private static readonly writerDynamicDefinitions: Map<string, WriterDefinition> = new Map<string, WriterDefinition>([

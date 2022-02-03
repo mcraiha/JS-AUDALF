@@ -185,6 +185,21 @@ Deno.test("Date array roundtrip test", () => {
   assertEquals(dateArray, dateArrayDeserialized, "Arrays should match");
 });
 
+// BooleansArrayRoundtripTest()
+Deno.test("Booleans array roundtrip test", () => {
+  // Arrange
+  const boolArray: boolean[] = [ true, true, true, false, true, false, false, true, false ];
+
+  // Act
+  const result: Uint8Array = AUDALF_Serialize.Serialize(boolArray);
+  const boolArrayDeserialized: Date[] = AUDALF_Deserialize.Deserialize(result);
+
+  // Assert
+  assertEquals(result.length > 0, true, "Result should NOT be empty");
+  assertEquals(boolArrayDeserialized.length > 0, true, "Byte array deserialized should NOT be empty");
+  assertEquals(boolArray, boolArrayDeserialized, "Arrays should match");
+});
+
 // ByteByteDictionaryRoundtripTest()
 Deno.test("Byte-byte dictionary roundtrip test", () => {
   // Arrange

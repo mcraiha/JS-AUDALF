@@ -528,6 +528,9 @@ export class AUDALF_Definitions
         // Dates
         this.datetime_unix_seconds.toString(),
         this.datetime_unix_milliseconds.toString(),
+
+        // Booleans
+        this.booleans.toString(),
     ]);
 
     private static readonly AUDALFtoByteLength: Map<string, number> = new Map<string, number>([
@@ -546,6 +549,8 @@ export class AUDALF_Definitions
 
         [AUDALF_Definitions.datetime_unix_seconds.toString(), 8],
         [AUDALF_Definitions.datetime_unix_milliseconds.toString(), 8],
+
+        [AUDALF_Definitions.booleans.toString(), 8],
     ]);
 
     static AUDALF_Definitions()

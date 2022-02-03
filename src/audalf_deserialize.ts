@@ -214,6 +214,17 @@ export class AUDALF_Deserialize
 
 					return returnValues;
 				}
+				else if (Definitions.ByteArrayCompare(sameTypes[1]!, Definitions.booleans))
+				{
+					const returnValues: boolean[] = new Array<boolean>(entryOffsets.length);
+					for (let i = 0; i < returnValues.length; i++)
+					{
+						const indexAndValue: [bigint, any] = AUDALF_Deserialize.ReadListKeyAndValueFromOffset(payload, entryOffsets[i], "");
+						returnValues[Number(indexAndValue[0])] = indexAndValue[1];
+					}
+
+					return returnValues;
+				}
 			}
 		}
 
@@ -479,7 +490,7 @@ export class AUDALF_Deserialize
 		}
 		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.booleans))
 		{
-			//return reader.ReadBoolean();
+			return new DataView(payload.buffer, numberOffset, 1).getUint8(0) === 1;
 		}
 		else if (Definitions.ByteArrayCompare(typeIdAsBytes, Definitions.datetime_unix_seconds))
 		{
