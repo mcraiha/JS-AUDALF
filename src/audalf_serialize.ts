@@ -1,5 +1,8 @@
 import { AUDALF_Definitions as Definitions, SerializationSettings, DateTimeFormat } from "./AUDALF_Definitions.ts";
 
+/**
+ * Byte writer
+ */
 class ByteWriter
 {
     byteArray: Uint8Array;
@@ -161,9 +164,9 @@ interface WriterDefinition
     writerFunc: (writer: ByteWriter, value: any) => void;
 }
 
-/// <summary>
-/// Static class for serializing structures to AUDALF bytes
-/// </summary>
+/**
+ * Static class for serializing structures to AUDALF bytes
+ */
 export class AUDALF_Serialize
 {
     private static readonly KeyCannotBeNullError: string = "Key cannot be null!";
